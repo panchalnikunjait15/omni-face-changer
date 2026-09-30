@@ -121,7 +121,6 @@ if option == "Image Face Swap (Ultra-Realistic)":
             res_img = t_img.copy()
             for face in t_faces:
                 res_img = swapper.get(res_img, face, s_faces[0], paste_back=True)
-                # Apply seamless soft edge blending
                 res_img = apply_seamless_blend(t_img, res_img, face.bbox)
             
             res_rgb = cv2.cvtColor(res_img, cv2.COLOR_BGR2RGB)
@@ -131,8 +130,70 @@ if option == "Image Face Swap (Ultra-Realistic)":
             st.error("❌ Face detect nathi thayo! Saro photo upload karo.")
 
 elif option == "Video Face Swap":
-    st.subheader("🎥 Video Face Swap Module")
-    st.info("Video face swap module is active and ready.")
+    st.subheader("🎥 Advanced Video Face Swap Module")
+    source_vid_photo = st.file_uploader("Source Face Photo UPLOAD karo (Jiska face lagana hai):", type=['jpg', 'jpeg', 'png', 'webp'], key="v_src")
+    target_video = st.file_uploader("Target Video UPLOAD karo (Jis video par face swap karna hai):", type=['mp4', 'avi', 'mov', 'webm'], key="v_tgt")
+    
+    if source_vid_photo and target_video and app and swapper:
+        s_img = cv2.imdecode(np.frombuffer(source_vid_photo.read(), np.uint8), 1)
+        s_faces = app.get(s_img)
+        
+        if len(s_faces) > 0:
+            t_video_path = "temp_input.mp4"
+            with open(t_video_path, "wb") as f:
+                f.write(target_video.read())
+            
+            cap = cv2.VideoCapture(t_video_path)
+            fps = int(cap.get(cv2.CAP_PROP_FPS)) or 30
+            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 100
+            
+            out_video_path = "output_swapped.mp4"
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            out = cv2.VideoWriter(out_video_path, fourcc, fps, (width, height))
+            
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            frame_idx = 0
+            while cap.isOpened():
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                
+                t_faces = app.get(frame)
+                res_frame = frame.copy()
+                if len(t_faces) > 0:
+                    for face in t_faces:
+                        res_frame = swapper.get(res_frame, face, s_faces[0], paste_back=True)
+                        res_frame = apply_seamless_blend(frame, res_frame, face.bbox)
+                
+                out.write(res_frame)
+                frame_idx += 1
+                if total_frames > 0:
+                    progress = min(1.0, frame_idx / total_frames)
+                    progress_bar.progress(progress)
+                    status_text.text(f"Processing frame {frame_idx}/{total_frames}...")
+            
+            cap.release()
+            out.release()
+            
+            progress_bar.empty()
+            status_text.empty()
+            
+            st.success("🎉 Video Face Swap Successfully Completed!")
+            st.video(out_video_path)
+            
+            with open(out_video_path, "rb") as file:
+                st.download_button(
+                    label="📥 Download Swapped Video",
+                    data=file,
+                    file_name="face_swapped_video.mp4",
+                    mime="video/mp4"
+                )
+        else:
+            st.error("❌ Source photo ma face detect nathi thayo!")
 
 elif option == "Live Webcam Swap":
     st.subheader("🔴 Live Webcam Swap Module")
