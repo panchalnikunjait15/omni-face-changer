@@ -43,11 +43,11 @@ if option == "Pro Generative Photo Swap (100% Exact Identity)":
                         s_image.save(s_path)
                         t_image.save(t_path)
                         
-                        # Explicitly initializing Replicate Client with the token to resolve 401 error
                         client = replicate.Client(api_token=api_token)
                         
+                        # Updated model string without outdated hash to automatically use latest active version
                         output = client.run(
-                            "instantx/instantid:05d5d852895696d5951664dcf589255677d24260a92d40d99ef8291410406859",
+                            "instantx/instantid",
                             input={
                                 "image": open(t_path, "rb"),        # Target body/pose image
                                 "face_image": open(s_path, "rb"),   # Source original face image
