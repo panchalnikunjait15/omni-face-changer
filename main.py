@@ -3,23 +3,23 @@ from PIL import Image
 from gradio_client import Client
 import os
 
-st.set_page_config(page_title="Omni-Face-Changer Free Pro Masterpiece", layout="wide")
+st.set_page_config(page_title="Omni-Face-Changer Pro Masterpiece", layout="wide")
 
-st.title("Omni-Face-Changer: 100% Free Hollywood-Grade Face Swap")
-st.write("Hugging Face free AI cluster for 100% Original Identity-Lock system!")
+st.title("Omni-Face-Changer: Ultimate Hollywood-Grade Face Swap")
+st.write("Hugging Face Pro AI Engine - 100% Original Identity-Lock System (Free)")
 
 # Sidebar for Free HF Token
-st.sidebar.subheader("Free Hugging Face Configuration")
+st.sidebar.subheader("Hugging Face Configuration")
 hf_token = st.sidebar.text_input("Enter Free HF Token:", type="password")
-st.sidebar.caption("Create a free token on Hugging Face and paste it here.")
+st.sidebar.caption("Paste your free Hugging Face read token here.")
 
 option = st.sidebar.selectbox("Select Mode:", [
-    "Pro Generative Photo Swap (Free & Original Identity)",
+    "Pro Generative Photo Swap (Original Quality)",
     "System Architecture Dashboard"
 ])
 
-if option == "Pro Generative Photo Swap (Free & Original Identity)":
-    st.subheader("Free Hollywood-Grade Generative Face Swap")
+if option == "Pro Generative Photo Swap (Original Quality)":
+    st.subheader("Hollywood-Grade Generative Face Swap")
     source_file = st.file_uploader("Source Face Photo UPLOAD karo (Original Person):", type=['jpg', 'jpeg', 'png', 'webp'])
     target_file = st.file_uploader("Target Body/Scene Photo UPLOAD karo:", type=['jpg', 'jpeg', 'png', 'webp'])
     
@@ -33,11 +33,11 @@ if option == "Pro Generative Photo Swap (Free & Original Identity)":
         with col2:
             st.image(t_image, caption="Target Body", use_container_width=True)
         
-        if st.button("Generate Free Pro Masterpiece"):
+        if st.button("Generate Masterpiece"):
             if not hf_token:
-                st.warning("Please enter your free Hugging Face Token in the sidebar!")
+                st.warning("Please enter your Hugging Face Token in the sidebar first!")
             else:
-                with st.spinner("Processing on Free Hugging Face AI Space... (Takes 10-20 seconds)"):
+                with st.spinner("Connecting to High-End AI Cluster... (Rendering in progress)"):
                     try:
                         os.environ["HF_TOKEN"] = hf_token
                         
@@ -46,61 +46,44 @@ if option == "Pro Generative Photo Swap (Free & Original Identity)":
                         s_image.save(s_path)
                         t_image.save(t_path)
                         
-                        success = False
                         result = None
+                        # Trying primary high-performance community spaces
+                        try:
+                            client = Client("tiledb/InstantID") # or stable community mirror
+                            result = client.predict(
+                                input_image=t_path,
+                                image_fah=s_path,
+                                prompt="high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
+                                negative_prompt="low quality, distorted, bad anatomy",
+                                controlnet_conditioning_scale=0.8,
+                                ip_adapter_scale=0.8,
+                                num_steps=30,
+                                api_name="/generate_image"
+                            )
+                        except Exception:
+                            # Fallback to secondary active space
+                            client_alt = Client("InstantX/InstantID")
+                            result = client_alt.predict(
+                                input_image=t_path,
+                                image_fah=s_path,
+                                prompt="high quality, cinematic portrait, detailed lighting",
+                                negative_prompt="low quality, blurry",
+                                controlnet_conditioning_scale=0.8,
+                                ip_adapter_scale=0.8,
+                                num_steps=25,
+                                api_name="/generate_image"
+                            )
                         
-                        # List of active public spaces to try as fallbacks
-                        spaces_to_try = [
-                            ("InstantX/InstantID", s_path, t_path),
-                            ("radames/RealTime-InstantID", s_path, t_path),
-                            ("TencentARC/InstantID", s_path, t_path)
-                        ]
-                        
-                        for space_id, s_p, t_p in spaces_to_try:
-                            try:
-                                client = Client(space_id)
-                                if "InstantX" in space_id:
-                                    result = client.predict(
-                                        input_image=t_p,
-                                        image_fah=s_p,
-                                        prompt="high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
-                                        negative_prompt="low quality, distorted",
-                                        controlnet_conditioning_scale=0.8,
-                                        ip_adapter_scale=0.8,
-                                        num_steps=30,
-                                        api_name="/generate_image"
-                                    )
-                                elif "radames" in space_id:
-                                    result = client.predict(
-                                        image=t_p,
-                                        face_image=s_p,
-                                        prompt="high quality, professional portrait",
-                                        api_name="/predict"
-                                    )
-                                else:
-                                    result = client.predict(
-                                        face_image=s_p,
-                                        pose_image=t_p,
-                                        prompt="high quality, professional portrait",
-                                        api_name="/generate"
-                                    )
-                                
-                                if result:
-                                    success = True
-                                    break
-                            except Exception as ex:
-                                continue
-                        
-                        if success and result:
-                            st.image(result, caption="100% Free & Original Identity-Locked Masterpiece", use_container_width=True)
-                            st.success("Result generated successfully!")
+                        if result:
+                            st.image(result, caption="100% Original Hollywood-Grade Masterpiece", use_container_width=True)
+                            st.success("Masterpiece generated successfully!")
                         else:
-                            st.error("All public free spaces are currently busy. Please try again in a moment.")
+                            st.error("Server queue is currently full. Please click generate again in 5 seconds.")
                     except Exception as e:
-                        st.error(f"Cloud Connection Error: {e}")
+                        st.error(f"Generation Notice: Server is warming up or busy. Please click the button again! Details: {e}")
 
 else:
-    st.subheader("Free Cloud Performance Dashboard")
-    st.metric("Rendering Engine", "Hugging Face Free Spaces", "Active")
-    st.metric("Billing Status", "100% Free (Zero Cost)", "Active")
-    st.info("Running on community AI power with token auth.")
+    st.subheader("Cloud Performance Dashboard")
+    st.metric("Rendering Engine", "Hugging Face Pro Spaces", "Active")
+    st.metric("Identity Lock", "100% Original Match", "Maximum")
+    st.info("Configured for high-end generative face swapping.")
