@@ -12,9 +12,6 @@ st.write("Duniya ki sabse powerful, 100% Original Identity-Lock Generative AI Sy
 st.sidebar.subheader("🔑 Pro Cloud Configuration")
 api_token = st.sidebar.text_input("Enter Replicate API Token:", type="password")
 
-if api_token:
-    os.environ["REPLICATE_API_TOKEN"] = api_token
-
 option = st.sidebar.selectbox("Mode Pasand karo:", [
     "Pro Generative Photo Swap (100% Exact Identity)",
     "Hardware & Cloud Performance Dashboard"
@@ -46,8 +43,10 @@ if option == "Pro Generative Photo Swap (100% Exact Identity)":
                         s_image.save(s_path)
                         t_image.save(t_path)
                         
-                        # Corrected Replicate InstantID parameters (Target image as 'image', Source face as 'face_image')
-                        output = replicate.run(
+                        # Explicitly initializing Replicate Client with the token to resolve 401 error
+                        client = replicate.Client(api_token=api_token)
+                        
+                        output = client.run(
                             "instantx/instantid:05d5d852895696d5951664dcf589255677d24260a92d40d99ef8291410406859",
                             input={
                                 "image": open(t_path, "rb"),        # Target body/pose image
