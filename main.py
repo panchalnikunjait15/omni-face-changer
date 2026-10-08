@@ -45,18 +45,14 @@ if option == "Pro Generative Photo Swap (Original Quality)":
                         s_image.save(s_path)
                         t_image.save(t_path)
                         
-                        # Direct token authentication for gated InstantX/InstantID space
-                        client = Client("InstantX/InstantID", token=hf_token)
+                        # Connecting to active InstantID Gradio Space with token auth
+                        client = Client("radames/RealTime-InstantID", token=hf_token)
                         
                         result = client.predict(
-                            t_path,  # Target/Pose image
-                            s_path,  # Source face image
-                            "high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
-                            "low quality, distorted, bad anatomy",
-                            0.8,
-                            0.8,
-                            30,
-                            api_name="/generate_image"
+                            image=t_path,
+                            face_image=s_path,
+                            prompt="high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
+                            api_name="/predict"
                         )
                         
                         if result:
@@ -65,7 +61,7 @@ if option == "Pro Generative Photo Swap (Original Quality)":
                         else:
                             st.error("Failed to generate result.")
                     except Exception as e:
-                        st.error(f"Connection Error: {e}. (Tip: Ensure you have accepted terms at huggingface.co/InstantX/InstantID while logged into your HF account)")
+                        st.error(f"Connection Error: {e}")
 
 else:
     st.subheader("Cloud Performance Dashboard")
