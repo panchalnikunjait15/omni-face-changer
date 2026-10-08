@@ -6,7 +6,7 @@ import os
 st.set_page_config(page_title="Omni-Face-Changer Pro Masterpiece", layout="wide")
 
 st.title("Omni-Face-Changer: Ultimate Hollywood-Grade Face Swap")
-st.write("Hugging Face Pro AI Engine - 100% Original Identity-Lock System (Free)")
+st.write("Hugging Face Pro AI Engine - 100% Original Identity-Lock System")
 
 # Sidebar for Free HF Token
 st.sidebar.subheader("Hugging Face Configuration")
@@ -40,50 +40,32 @@ if option == "Pro Generative Photo Swap (Original Quality)":
             else:
                 with st.spinner("Connecting to High-End AI Cluster... (Rendering in progress)"):
                     try:
-                        if hf_token:
-                            os.environ["HF_TOKEN"] = hf_token
-                        
                         s_path = "temp_src.jpg"
                         t_path = "temp_tgt.jpg"
                         s_image.save(s_path)
                         t_image.save(t_path)
                         
-                        result = None
+                        # Direct token authentication for gated InstantX/InstantID space
+                        client = Client("InstantX/InstantID", token=hf_token)
                         
-                        # Trying InstantX/InstantID with positional parameters
-                        try:
-                            client = Client("InstantX/InstantID")
-                            result = client.predict(
-                                t_path,  # input_image / target pose image
-                                s_path,  # image_fah / source face image
-                                "high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
-                                "low quality, distorted, bad anatomy",
-                                0.8,
-                                0.8,
-                                30,
-                                api_name="/generate_image"
-                            )
-                        except Exception as e1:
-                            # Fallback to alternative space with positional parameters
-                            client_alt = Client("tiledb/InstantID")
-                            result = client_alt.predict(
-                                t_path,
-                                s_path,
-                                "high quality, professional portrait, cinematic lighting",
-                                "low quality, blurry",
-                                0.8,
-                                0.8,
-                                30,
-                                api_name="/generate_image"
-                            )
+                        result = client.predict(
+                            t_path,  # Target/Pose image
+                            s_path,  # Source face image
+                            "high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
+                            "low quality, distorted, bad anatomy",
+                            0.8,
+                            0.8,
+                            30,
+                            api_name="/generate_image"
+                        )
                         
                         if result:
                             st.image(result, caption="100% Original Hollywood-Grade Masterpiece", use_container_width=True)
                             st.success("Masterpiece generated successfully!")
                         else:
-                            st.error("Server queue is currently full. Please click generate again.")
+                            st.error("Failed to generate result.")
                     except Exception as e:
-                        st.error(f"Generation Error: {e}")
+                        st.error(f"Connection Error: {e}. (Tip: Ensure you have accepted terms at huggingface.co/InstantX/InstantID while logged into your HF account)")
 
 else:
     st.subheader("Cloud Performance Dashboard")
