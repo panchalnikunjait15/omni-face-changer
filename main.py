@@ -9,14 +9,14 @@ import socket
 import urllib.request
 import onnxruntime
 
-st.set_page_config(page_title="Omni-Face-Changer Seamless Masterpiece", layout="wide")
+st.set_page_config(page_title="Omni-Face-Changer Masterpiece", layout="wide")
 
 if "history" not in st.session_state:
     st.session_state.history = []
 
 @st.cache_resource
 def load_ai_models():
-    print("🚀 Loading Advanced Seamless AI Engine...")
+    print("🚀 Loading AI Models...")
     providers = ['CPUExecutionProvider']
     if 'CUDAExecutionProvider' in onnxruntime.get_available_providers():
         providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
@@ -45,76 +45,76 @@ app, swapper = load_ai_models()
 lang = st.sidebar.selectbox("🌐 Choose Language / પસંદ કરો / भाषा चुनें", ["English", "ગુજરાતી", "हिंदी"])
 
 if lang == "ગુજરાતી":
-    title_text = "🔥 ઓમ્ની-ફેસ-ચેંજર: સીમલેસ અલ્ટીમેટ માસ્ટરપીસ"
-    desc_text = "cv2.seamlessClone અને એડવાન્સ્ડ રિયલ બ્લેન્ડિંગ સાથે દુનિયાની સૌથી બેસ્ટ ફેસ-સ્વેપિંગ સિસ્ટમ!"
+    title_text = "🔥 ઓમ્ની-ફેસ-ચેંજર: અલ્ટીમેટ માસ્ટરપીસ સૂટ"
+    desc_text = "ગ્લિચ-ફ્રી, 100% રિયલ અને નેચરલ ફેસ-સ્વેપિંગ સિસ્ટમ!"
     mode_label = "મોડ પસંદ કરો:"
 elif lang == "हिंदी":
-    title_text = "🔥 ओम्नी-फेस-चेेंजर: सीमलेस अल्टीमेट मास्टरपीस"
-    desc_text = "cv2.seamlessClone और एडवांस रियल ब्लेंडिंग के साथ दुनिया की सबसे बेस्ट फेस-स्वैपिंग सिस्टम!"
+    title_text = "🔥 ओम्नी-फेस-चेेंजर: अल्टीमेट मास्टरपीस सूट"
+    desc_text = "ग्लिच-फ्री, 100% रियल और नेचुरल फेस-स्वैपिंग सिस्टम!"
     mode_label = "मोड चुनें:"
 else:
-    title_text = "🔥 Omni-Face-Changer: Seamless Ultimate Masterpiece"
-    desc_text = "World's Best Face-Swapping System with cv2.seamlessClone & Advanced Real Blending!"
+    title_text = "🔥 Omni-Face-Changer: Ultimate Masterpiece Suite"
+    desc_text = "Glitch-Free, 100% Real & Natural Face-Swapping System!"
     mode_label = "Mode Pasand karo:"
 
 st.title(title_text)
 st.write(desc_text)
 
 option = st.sidebar.selectbox(mode_label, [
-    "Seamless Ultra-Realistic Photo Swap",
-    "Seamless Video Swap Engine",
+    "Ultra-Realistic Photo Swap",
+    "Video Swap Engine",
     "Real-ESRGAN 4K Detail Enhancer",
     "Hardware Performance Dashboard"
 ])
 
-def apply_advanced_seamless_blend(target_img, swapped_full_img, face):
+def apply_glitch_free_real_blend(target_img, swapped_full_img, face):
     try:
         x1, y1, x2, y2 = map(int, face.bbox)
         h, w, _ = target_img.shape
+        x1, y1 = max(0, x1), max(0, y1)
+        x2, y2 = min(w, x2), min(h, y2)
         
-        # Add a clean padding around the face bounding box
-        pad = 25
-        nx1, ny1 = max(0, x1 - pad), max(0, y1 - pad)
-        nx2, ny2 = min(w, x2 + pad), min(h, y2 + pad)
-        
-        # Crop the face region from swapped image as source
-        src_crop = swapped_full_img[ny1:ny2, nx1:nx2]
-        crop_h, crop_w = src_crop.shape[:2]
-        
-        if crop_h <= 0 or crop_w <= 0:
+        if x2 <= x1 or y2 <= y1:
             return swapped_full_img
             
-        # Create a localized smooth mask for cv2.seamlessClone
-        mask = np.zeros((crop_h, crop_w), dtype=np.uint8)
+        # 1. Advanced LAB Color Matching to match exact skin tone and lighting
+        target_face = target_img[y1:y2, x1:x2]
+        swapped_face = swapped_full_img[y1:y2, x1:x2]
+        if target_face.size > 0 and swapped_face.size > 0:
+            t_lab = cv2.cvtColor(target_face, cv2.COLOR_BGR2LAB).astype("float32")
+            s_lab = cv2.cvtColor(swapped_face, cv2.COLOR_BGR2LAB).astype("float32")
+            for i in range(3):
+                s_mean, s_std = s_lab[:,:,i].mean(), s_lab[:,:,i].std()
+                t_mean, t_std = t_lab[:,:,i].mean(), t_lab[:,:,i].std()
+                s_lab[:,:,i] = ((s_lab[:,:,i] - s_mean) * (t_std / (s_std + 1e-5))) + t_mean
+            s_lab = np.clip(s_lab, 0, 255).astype("uint8")
+            swapped_full_img[y1:y2, x1:x2] = cv2.cvtColor(s_lab, cv2.COLOR_LAB2BGR)
+
+        # 2. Skin texture enhancement for pores and realistic details
+        swapped_full_img[y1:y2, x1:x2] = cv2.detailEnhance(swapped_full_img[y1:y2, x1:x2], sigma_s=10, sigma_r=0.15)
+
+        # 3. Smooth Gaussian Feathered Mask (Zero harsh lines or glitches)
+        mask = np.zeros((h, w), dtype=np.uint8)
         if hasattr(face, 'kps') and face.kps is not None:
-            local_pts = (face.kps - [nx1, ny1]).astype(np.int32)
-            hull = cv2.convexHull(local_pts)
+            pts = face.kps.astype(np.int32)
+            hull = cv2.convexHull(pts)
             cv2.fillConvexPoly(mask, hull, 255)
-            mask = cv2.GaussianBlur(mask, (15, 15), 7)
+            mask = cv2.GaussianBlur(mask, (35, 35), 18)
         else:
-            center_local = (crop_w // 2, crop_h // 2)
-            axes = (crop_w // 2 - 5, crop_h // 2 - 5)
-            cv2.ellipse(mask, center_local, axes, 0, 0, 360, 255, -1)
-            mask = cv2.GaussianBlur(mask, (15, 15), 7)
-            
-        # Destination center point in target image
-        center_target = ((nx1 + nx2) // 2, (ny1 + ny2) // 2)
-        
-        # 1. OpenCV Poisson Seamless Cloning (Completely removes borders, lines, and lighting mismatch)
-        output = cv2.seamlessClone(src_crop, target_img, mask, center_target, cv2.NORMAL_CLONE)
-        
-        # 2. Micro-skin texture enhancement on the swapped region for natural real look
-        face_roi = output[ny1:ny2, nx1:nx2]
-        if face_roi.size > 0:
-            output[ny1:ny2, nx1:nx2] = cv2.detailEnhance(face_roi, sigma_s=10, sigma_r=0.15)
-            
+            center = ((x1 + x2) // 2, (y1 + y2) // 2)
+            axes = ((x2 - x1) // 2, (y2 - y1) // 2)
+            cv2.ellipse(mask, center, axes, 0, 0, 360, 255, -1)
+            mask = cv2.GaussianBlur(mask, (25, 25), 12)
+
+        mask_3d = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR) / 255.0
+        output = (swapped_full_img * mask_3d + target_img * (1 - mask_3d)).astype(np.uint8)
         return output
     except Exception as e:
-        print(f"Seamless Error: {e}")
+        print(f"Blend Error: {e}")
         return swapped_full_img
 
-if option == "Seamless Ultra-Realistic Photo Swap":
-    st.subheader("📸 100% Real Seamless Photo Swap (cv2.seamlessClone)")
+if option == "Ultra-Realistic Photo Swap":
+    st.subheader("📸 100% Glitch-Free & Natural Photo Swap")
     source_file = st.file_uploader("Source Face Photo UPLOAD karo:", type=['jpg', 'jpeg', 'png', 'webp'])
     target_file = st.file_uploader("Target Body Photo UPLOAD karo:", type=['jpg', 'jpeg', 'png', 'webp'])
     
@@ -129,16 +129,16 @@ if option == "Seamless Ultra-Realistic Photo Swap":
             res_img = t_img.copy()
             for face in t_faces:
                 swapped_temp = swapper.get(res_img, face, s_faces[0], paste_back=True)
-                res_img = apply_advanced_seamless_blend(res_img, swapped_temp, face)
+                res_img = apply_glitch_free_real_blend(t_img, swapped_temp, face)
             
             res_rgb = cv2.cvtColor(res_img, cv2.COLOR_BGR2RGB)
-            st.image(res_rgb, caption="✨ 100% Real, Seamless & Undetectable Face Swap", use_container_width=True)
-            st.success("🎉 Seamless Face Swap Completed Successfully!")
+            st.image(res_rgb, caption="✨ 100% Clean, Real & Natural Face Swap", use_container_width=True)
+            st.success("🎉 Face Swap Completed Successfully!")
         else:
             st.error("❌ Face detect nathi thayo! Saro photo upload karo.")
 
-elif option == "Seamless Video Swap Engine":
-    st.subheader("🎥 Seamless Video Face Swap Module")
+elif option == "Video Swap Engine":
+    st.subheader("🎥 Video Face Swap Module")
     source_vid_photo = st.file_uploader("Source Face Photo UPLOAD karo:", type=['jpg', 'jpeg', 'png', 'webp'], key="v_src")
     target_video = st.file_uploader("Target Video UPLOAD karo:", type=['mp4', 'avi', 'mov', 'webm'], key="v_tgt")
     
@@ -157,7 +157,7 @@ elif option == "Seamless Video Swap Engine":
             height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 100
             
-            out_video_path = "output_seamless_video.mp4"
+            out_video_path = "output_video.mp4"
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             out = cv2.VideoWriter(out_video_path, fourcc, fps, (width, height))
             
@@ -175,14 +175,14 @@ elif option == "Seamless Video Swap Engine":
                 if len(t_faces) > 0:
                     for face in t_faces:
                         swapped_temp = swapper.get(res_frame, face, s_faces[0], paste_back=True)
-                        res_frame = apply_advanced_seamless_blend(frame, swapped_temp, face)
+                        res_frame = apply_glitch_free_real_blend(frame, swapped_temp, face)
                 
                 out.write(res_frame)
                 frame_idx += 1
                 if total_frames > 0:
                     progress = min(1.0, frame_idx / total_frames)
                     progress_bar.progress(progress)
-                    status_text.text(f"Processing Seamless Frame {frame_idx}/{total_frames}...")
+                    status_text.text(f"Processing Frame {frame_idx}/{total_frames}...")
             
             cap.release()
             out.release()
@@ -190,14 +190,14 @@ elif option == "Seamless Video Swap Engine":
             progress_bar.empty()
             status_text.empty()
             
-            st.success("🎉 Seamless Video Face Swap Completed!")
+            st.success("🎉 Video Face Swap Completed!")
             st.video(out_video_path)
             
             with open(out_video_path, "rb") as file:
                 st.download_button(
-                    label="📥 Download Seamless Video",
+                    label="📥 Download Swapped Video",
                     data=file,
-                    file_name="seamless_swapped_video.mp4",
+                    file_name="swapped_video.mp4",
                     mime="video/mp4"
                 )
         else:
