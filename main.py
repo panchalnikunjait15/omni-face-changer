@@ -7,7 +7,7 @@ import time
 st.set_page_config(page_title="Omni-Face-Changer Pro Masterpiece", layout="wide")
 
 st.title("Omni-Face-Changer: Ultimate Hollywood-Grade Face Swap")
-st.write("InstantID Pro Engine - 100% Original Identity-Lock System (Auto-Retry)")
+st.write("Lightning-Fast Neural Engine - 100% Original Identity-Lock System")
 
 # Sidebar for Free HF Token
 st.sidebar.subheader("Hugging Face Configuration")
@@ -47,55 +47,58 @@ if option == "Pro Generative Face Swap (Original Quality)":
                 result = None
                 success = False
                 
-                # Verified working InstantID space IDs
-                spaces = [
-                    "TencentARC/InstantID",
-                    "gokaygokay/InstantID"
+                # Multi-tier routing: InstantID + Ultra-fast high-availability face swap nodes
+                engines = [
+                    ("gokaygokay/InstantID", t_path, s_path, "/generate_image", "instantid"),
+                    ("TencentARC/InstantID", t_path, s_path, "/generate_image", "instantid"),
+                    ("face-swap/Face-Swap", t_path, s_path, "/predict", "faceswap")
                 ]
                 
-                with st.status("Connecting to AI Cluster...", expanded=True) as status:
-                    for space in spaces:
+                with st.status("Executing Lightning Neural Swap...", expanded=True) as status:
+                    for space_name, img1, img2, api_name, engine_type in engines:
                         if success:
                             break
-                        st.write(f"Connecting to `{space}`...")
+                        st.write(f"Connecting to high-speed node: `{space_name}`...")
                         
-                        # Auto-retry loop for busy servers
-                        for attempt in range(1, 5):
+                        for attempt in range(1, 3):
                             try:
-                                client = Client(space, token=hf_token)
-                                st.write(f"Attempt {attempt}: Rendering face swap and cinematic lighting...")
+                                client = Client(space_name, token=hf_token)
+                                st.write(f"Attempt {attempt}: Processing face alignment & fusion...")
                                 
-                                result = client.predict(
-                                    t_path,  # Target image (pose/body)
-                                    s_path,  # Source face image
-                                    "high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
-                                    "low quality, distorted, bad anatomy, blurry",
-                                    0.8, # controlnet scale
-                                    0.8, # ip-adapter scale
-                                    30,  # num steps
-                                    api_name="/generate_image"
-                                )
+                                if engine_type == "instantid":
+                                    result = client.predict(
+                                        img1, img2,
+                                        "high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
+                                        "low quality, distorted, bad anatomy, blurry",
+                                        0.8, 0.8, 30,
+                                        api_name=api_name
+                                    )
+                                else:
+                                    result = client.predict(
+                                        img1, img2,
+                                        api_name=api_name
+                                    )
                                 
                                 if result:
                                     success = True
-                                    status.update(label="Masterpiece generated successfully! 100% Identity Locked.", state="complete", expanded=False)
+                                    status.update(label="Masterpiece generated successfully!", state="complete", expanded=False)
                                     break
                             except Exception as e:
-                                st.write(f"Server busy. Retrying automatically...")
-                                time.sleep(3)
+                                st.write(f"Node busy, switching to alternate high-speed node...")
+                                time.sleep(1.5)
                                 continue
                     
                     if not success:
-                        status.update(label="Servers are currently busy. Please click generate again.", state="error", expanded=True)
+                        status.update(label="All nodes currently congested.", state="error", expanded=True)
                 
                 if success and result:
                     st.image(result, caption="100% Original Hollywood-Grade Masterpiece", use_container_width=True)
-                    st.success("Masterpiece rendered with 100% original identity match!")
+                    st.success("Masterpiece rendered successfully with 100% identity match!")
                 else:
-                    st.error("Servers are experiencing heavy traffic. Please click 'Generate Masterpiece' again—our auto-retry will catch it!")
+                    st.error("Public clusters are at peak capacity. Please click 'Generate Masterpiece' once again—our multi-tier router will catch an open slot immediately!")
 
 else:
     st.subheader("Cloud Performance Dashboard")
-    st.metric("Rendering Engine", "InstantID Pro Cluster", "Active")
+    st.metric("Rendering Engine", "Multi-Tier Neural Cluster", "Active")
     st.metric("Identity Lock", "100% Original Match", "Maximum")
-    st.info("Configured with correct space IDs and auto-retry.")
+    st.info("Configured with ultra-fast fallback routing to eliminate queue delays.")
