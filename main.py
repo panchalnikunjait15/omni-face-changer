@@ -6,9 +6,13 @@ import os
 st.set_page_config(page_title="Omni-Face-Changer Free Pro Masterpiece", layout="wide")
 
 st.title("🔥 Omni-Face-Changer: 100% Free Hollywood-Grade Face Swap")
-st.write("Bina koi paisa kharchya, Hugging Face na free AI cluster thi 100% Original Identity-Lock system!")
+st.write("Hugging Face na free AI cluster thi 100% Original Identity-Lock system!")
 
-# Mode Selection in Sidebar
+# Sidebar for Free HF Token
+st.sidebar.subheader("🔑 Free Hugging Face Configuration")
+hf_token = st.sidebar.text_input("Enter Free HF Token:", type="password")
+st.sidebar.caption("Hugging Face parthi free token banavi ne ahi nakhvo (Gated spaces access mate jaruri che).")
+
 option = st.sidebar.selectbox("Mode Pasand karo:", [
     "Pro Generative Photo Swap (100% Free & Original Identity)",
     "System Architecture Dashboard"
@@ -30,55 +34,43 @@ if option == "Pro Generative Photo Swap (100% Free & Original Identity)":
             st.image(t_image, caption="Target Body", use_container_width=True)
         
         if st.button("🚀 Generate 100% Free Pro Masterpiece"):
-            with st.spinner("✨ Free Hugging Face AI Space par rendering thai rhi che... (Ahi 10-20 sekund lagi shake, kem ke aa ekdam free public cluster che)"):
-                try:
-                    s_path = "temp_src.jpg"
-                    t_path = "temp_tgt.jpg"
-                    s_image.save(s_path)
-                    t_image.save(t_path)
-                    
-                    # Connecting to a public free InstantID Space via gradio_client (Zero Cost!)
-                    client = Client("gokaygokay/InstantID")
-                    
-                    result = client.predict(
-                        input_image=t_path,
-                        image_fah=s_path,  # Source face image
-                        prompt="high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
-                        negative_prompt="low quality, distorted, bad anatomy, deformed",
-                        controlnet_conditioning_scale=0.8,
-                        ip_adapter_scale=0.8,
-                        num_steps=30,
-                        api_name="/generate_image"
-                    )
-                    
-                    if result:
-                        st.image(result, caption="✨ 100% Free & Original Identity-Locked Masterpiece", use_container_width=True)
-                        st.success("🎉 Ekdam free ane zabardast Hollywood-grade result taiyar che!")
-                    else:
-                        st.error("❌ Result generate nathi thayo.")
-                except Exception as e:
-                    # Alternative fallback public space if primary is busy
+            if not hf_token:
+                st.warning("⚠️ Krupaya sidebar ma potano free Hugging Face Token nakhvo!")
+            else:
+                with st.spinner("✨ Free Hugging Face AI Space par rendering thai rhi che... (10-20 sekund lagse)"):
                     try:
-                        client_alt = Client("TencentARC/InstantID")
-                        result_alt = client_alt.predict(
-                            face_image=s_path,
-                            pose_image=t_path,
-                            prompt="high quality, professional portrait, ultra realistic skin pores, 8k resolution",
-                            negative_prompt="low quality, distorted",
-                            scale=1.2,
+                        # Setting environment token for gradio_client authentication
+                        os.environ["HF_TOKEN"] = hf_token
+                        
+                        s_path = "temp_src.jpg"
+                        t_path = "temp_tgt.jpg"
+                        s_image.save(s_path)
+                        t_image.save(t_path)
+                        
+                        # Connecting to free InstantID Space with token auth
+                        client = Client("gokaygokay/InstantID")
+                        
+                        result = client.predict(
+                            input_image=t_path,
+                            image_fah=s_path,
+                            prompt="high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
+                            negative_prompt="low quality, distorted, bad anatomy, deformed",
+                            controlnet_conditioning_scale=0.8,
+                            ip_adapter_scale=0.8,
                             num_steps=30,
-                            api_name="/generate"
+                            api_name="/generate_image"
                         )
-                        if result_alt:
-                            st.image(result_alt, caption="✨ 100% Free Masterpiece (Alt Server)", use_container_width=True)
-                            st.success("🎉 Result aavi gayo!")
+                        
+                        if result:
+                            st.image(result, caption="✨ 100% Free & Original Identity-Locked Masterpiece", use_container_width=True)
+                            st.success("🎉 Ekdam free ane zabardast Hollywood-grade result taiyar che!")
                         else:
-                            st.error("❌ Alternate server par pan result nathi malyo.")
-                    except Exception as e2:
-                        st.error(f"Free Cloud Connection Error: {e} | {e2}")
+                            st.error("❌ Result generate nathi thayo.")
+                    except Exception as e:
+                        st.error(f"Free Cloud Connection Error: {e}")
 
 else:
     st.subheader("📊 Free Cloud Performance Dashboard")
     st.metric("Rendering Engine", "Hugging Face Free Spaces", "Active")
     st.metric("Billing Status", "100% Free (Zero Cost)", "Active")
-    st.info("No API token required. Running on open-source community AI power.")
+    st.info("Running on community AI power with token auth.")
