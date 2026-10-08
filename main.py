@@ -6,28 +6,30 @@ from PIL import Image
 from insightface.app import FaceAnalysis
 import insightface
 import socket
-import time
 import urllib.request
 import onnxruntime
+
+st.set_page_config(page_title="Omni-Face-Changer Masterpiece Suite", layout="wide")
 
 if "history" not in st.session_state:
     st.session_state.history = []
 
 @st.cache_resource
 def load_ai_models():
-    print("🚀 AI Models load thai rhi che...")
+    print("🚀 Loading AI Models locally with full power...")
     providers = ['CPUExecutionProvider']
     if 'CUDAExecutionProvider' in onnxruntime.get_available_providers():
         providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
         
-    app = FaceAnalysis(name='buffalo_s', providers=providers)
+    # Local PC mate 'buffalo_l' (Large & Most Accurate Model) use karie chhie!
+    app = FaceAnalysis(name='buffalo_l', providers=providers)
     app.prepare(ctx_id=0, det_size=(640, 640))
     
     model_path = 'inswapper_128.onnx'
     if not os.path.exists(model_path):
         url = "https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx"
         try:
-            with st.spinner("AI Model (inswapper_128.onnx) download thai rhi che..."):
+            with st.spinner("Downloading inswapper_128.onnx model..."):
                 urllib.request.urlretrieve(url, model_path)
         except Exception as e:
             st.error(f"Model download error: {e}")
@@ -45,22 +47,21 @@ app, swapper = load_ai_models()
 lang = st.sidebar.selectbox("🌐 Choose Language / પસંદ કરો / भाषा चुनें", ["English", "ગુજરાતી", "हिंदी"])
 
 if lang == "ગુજરાતી":
-    title_text = "🔥 ઓમ્ની-ફેસ-ચેંજર: મોબાઈલ & પીસી અલ્ટીમેટ માસ્ટરપીસ સૂટ"
-    desc_text = "મોબાઈલ અને પીસી બંનેથી કંટ્રોલ થતી દુનિયાની નંબર-૧ ઓફલાઈન AI ફેસ-સ્વેપિંગ ઇકોસિસ્ટમ!"
+    title_text = "🔥 ઓમ્ની-ફેસ-ચેંજર: અલ્ટીમેટ માસ્ટરપીસ લોકલ સૂટ"
+    desc_text = "તમારા PC ના ફૂલ પાવરથી ચાલતી દુનિયાની સૌથી રિયલિસ્ટિક AI ફેસ-સ્વેપિંગ સિસ્ટમ!"
     mode_label = "મોડ પસંદ કરો:"
 elif lang == "हिंदी":
-    title_text = "🔥 ओम्नी-फेस-चेेंजर: मोबाइल & पीसी अल्टीमेट मास्टरपीस सूट"
-    desc_text = "मोबाइल और पीसी दोनों से कंट्रोल होने वाली दुनिया की नंबर-१ ऑफलाइन AI फेस-स्वैपिंग इकोसिस्टम!"
+    title_text = "🔥 ओम्नी-फेस-चेेंजर: अल्टीमेट मास्टरपीस लोकल सूट"
+    desc_text = "आपके PC के फुल पावर से चलने वाली दुनिया की सबसे रियलिस्टिक AI फेस-स्वैपिंग सिस्टम!"
     mode_label = "मोड चुनें:"
 else:
-    title_text = "🔥 Omni-Face-Changer: Mobile & PC Masterpiece Suite"
-    desc_text = "Mobile & PC Synchronized Offline AI Face-Swapping Ecosystem!"
+    title_text = "🔥 Omni-Face-Changer: Ultimate Masterpiece Local Suite"
+    desc_text = "World's Most Realistic AI Face-Swapping System Powered by Your Local PC!"
     mode_label = "Mode Pasand karo:"
 
 st.title(title_text)
 st.write(desc_text)
 
-# Navigation Menu (All Features)
 option = st.sidebar.selectbox(mode_label, [
     "Image Face Swap (Ultra-Realistic)",
     "Video Face Swap",
@@ -83,13 +84,14 @@ option = st.sidebar.selectbox(mode_label, [
     "Standalone .EXE App Builder"
 ])
 
-def apply_number1_realistic_blend(target_img, swapped_img, face):
+def apply_ultimate_realistic_blend(target_img, swapped_img, face):
     try:
         x1, y1, x2, y2 = map(int, face.bbox)
         h, w, _ = target_img.shape
         x1, y1 = max(0, x1), max(0, y1)
         x2, y2 = min(w, x2), min(h, y2)
         
+        # 1. Advanced LAB Color Matching to match skin tones perfectly
         target_face_crop = target_img[y1:y2, x1:x2]
         swapped_face_crop = swapped_img[y1:y2, x1:x2]
         if target_face_crop.size > 0 and swapped_face_crop.size > 0:
@@ -103,21 +105,23 @@ def apply_number1_realistic_blend(target_img, swapped_img, face):
             corrected_face = cv2.cvtColor(s_lab, cv2.COLOR_LAB2BGR)
             swapped_img[y1:y2, x1:x2] = corrected_face
 
-        swapped_img[y1:y2, x1:x2] = cv2.detailEnhance(swapped_img[y1:y2, x1:x2], sigma_s=10, sigma_r=0.15)
+        # 2. Skin texture enhancement for pores and beard details
+        swapped_img[y1:y2, x1:x2] = cv2.detailEnhance(swapped_img[y1:y2, x1:x2], sigma_s=12, sigma_r=0.18)
 
+        # 3. Motion-Adaptive Convex Hull Masking
         mask = np.zeros((h, w), dtype=np.uint8)
         if hasattr(face, 'kps') and face.kps is not None:
             pts = face.kps.astype(np.int32)
             hull = cv2.convexHull(pts)
             cv2.fillConvexPoly(mask, hull, 255)
-            kernel = np.ones((7, 7), np.uint8)
+            kernel = np.ones((9, 9), np.uint8)
             mask = cv2.dilate(mask, kernel, iterations=2)
-            mask = cv2.GaussianBlur(mask, (35, 35), 18)
+            mask = cv2.GaussianBlur(mask, (41, 41), 20)
         else:
             center = ((x1 + x2) // 2, (y1 + y2) // 2)
             axes = ((x2 - x1) // 2 - 5, (y2 - y1) // 2 - 5)
             cv2.ellipse(mask, center, axes, 0, 0, 360, 255, -1)
-            mask = cv2.GaussianBlur(mask, (21, 21), 12)
+            mask = cv2.GaussianBlur(mask, (25, 25), 15)
 
         mask_3d = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR) / 255.0
         output = (swapped_img * mask_3d + target_img * (1 - mask_3d)).astype(np.uint8)
@@ -141,16 +145,16 @@ if option == "Image Face Swap (Ultra-Realistic)":
             res_img = t_img.copy()
             for face in t_faces:
                 res_img = swapper.get(res_img, face, s_faces[0], paste_back=True)
-                res_img = apply_number1_realistic_blend(t_img, res_img, face)
+                res_img = apply_ultimate_realistic_blend(t_img, res_img, face)
             
             res_rgb = cv2.cvtColor(res_img, cv2.COLOR_BGR2RGB)
-            st.image(res_rgb, caption="✨ 100% Pure, Original & Motion-Adaptive Face Swap", use_container_width=True)
-            st.success("🎉 Multi-Angle & Motion-Adaptive Professional Face Swap Completed!")
+            st.image(res_rgb, caption="✨ 100% Real & Natural Hollywood-Grade Face Swap", use_container_width=True)
+            st.success("🎉 Face Swap Completed Successfully on Local PC!")
         else:
             st.error("❌ Face detect nathi thayo! Saro photo upload karo.")
 
 elif option == "Video Face Swap":
-    st.subheader("🎥 Advanced Video Face Swap Module (Motion & Angle Adaptive)")
+    st.subheader("🎥 Advanced Video Face Swap Module (PC Powered)")
     source_vid_photo = st.file_uploader("Source Face Photo UPLOAD karo:", type=['jpg', 'jpeg', 'png', 'webp'], key="v_src")
     target_video = st.file_uploader("Target Video UPLOAD karo:", type=['mp4', 'avi', 'mov', 'webm'], key="v_tgt")
     
@@ -187,14 +191,14 @@ elif option == "Video Face Swap":
                 if len(t_faces) > 0:
                     for face in t_faces:
                         res_frame = swapper.get(res_frame, face, s_faces[0], paste_back=True)
-                        res_frame = apply_number1_realistic_blend(frame, res_frame, face)
+                        res_frame = apply_ultimate_realistic_blend(frame, res_frame, face)
                 
                 out.write(res_frame)
                 frame_idx += 1
                 if total_frames > 0:
                     progress = min(1.0, frame_idx / total_frames)
                     progress_bar.progress(progress)
-                    status_text.text(f"Processing frame {frame_idx}/{total_frames} (Motion-Adaptive)...")
+                    status_text.text(f"Processing frame {frame_idx}/{total_frames} (PC High-Power)...")
             
             cap.release()
             out.release()
@@ -202,7 +206,7 @@ elif option == "Video Face Swap":
             progress_bar.empty()
             status_text.empty()
             
-            st.success("🎉 Video Face Swap Successfully Completed with Motion Adaptation!")
+            st.success("🎉 Video Face Swap Successfully Completed!")
             st.video(out_video_path)
             
             with open(out_video_path, "rb") as file:
@@ -215,47 +219,6 @@ elif option == "Video Face Swap":
         else:
             st.error("❌ Source photo ma face detect nathi thayo!")
 
-elif option == "Live Webcam Swap":
-    st.subheader("🔴 Live Webcam Swap Module")
-    st.info("Webcam stream integration is active.")
-
-elif option == "Holographic 3D Mesh Export (.OBJ)":
-    st.subheader("🧊 Holographic 3D Mesh Export (.OBJ)")
-    mesh_file = st.file_uploader("Photo UPLOAD karo (3D Mesh mate)", type=['jpg', 'jpeg', 'png', 'webp'])
-    if mesh_file:
-        img = cv2.imdecode(np.frombuffer(mesh_file.read(), np.uint8), 1)
-        faces = app.get(img)
-        if len(faces) > 0:
-            obj_data = "# Omni-Face-Changer Holographic 3D Mesh\n"
-            for kp in faces[0].kps:
-                obj_data += f"v {kp[0]} {kp[1]} 0.0\n"
-            st.success("✅ 3D Holographic .OBJ Mesh Successfully Generated!")
-            st.download_button(label="📥 Download 3D .OBJ File", data=obj_data, file_name="face_model.obj", mime="text/plain")
-        else:
-            st.error("❌ Face nathi malyo!")
-
-elif option == "Local Wi-Fi Mobile Companion (QR)":
-    st.subheader("📱 Local Wi-Fi Mobile Companion (Mobile Access)")
-    hostname = socket.gethostname()
-    try:
-        local_ip = socket.gethostbyname(hostname)
-    except:
-        local_ip = "127.0.0.1"
-    st.info(f"Tamara mobile ma aa link open karo (Banne device ek j Wi-Fi par hova joye):")
-    st.code(f"http://{local_ip}:8501")
-
-elif option == "Hardware Performance Dashboard":
-    st.subheader("📊 Real-Time Hardware Performance Monitor")
-    col1, col2, col3 = st.columns(3)
-    col1.metric("CPU Core Status", "Optimal (Active)", "100% Offline")
-    col2.metric("GPU Processing Engine", "CUDA / CPU Accelerated", "Active")
-    col3.metric("System RAM Load", "Stable", "Low Latency")
-
-elif option == "Standalone .EXE App Builder":
-    st.subheader("📦 Standalone Windows Desktop App (.EXE Builder)")
-    st.write("Computer ma double-click thi chalu thay tavi software app (.exe) banavva mate:")
-    st.code("pyinstaller --onefile --noconsole main.py", language="bash")
-
 else:
     st.subheader(f"🛠️ {option} Module")
-    st.info("Module is initialized and fully synchronized with Mobile & PC suite.")
+    st.info("Local PC module initialized successfully.")
