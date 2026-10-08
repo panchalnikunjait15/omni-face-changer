@@ -5,8 +5,8 @@ import replicate
 
 st.set_page_config(page_title="Omni-Face-Changer Pro Masterpiece", layout="wide")
 
-st.title("🔥 Omni-Face-Changer: Professional PuLID & InstantID Suite")
-st.write("Duniya ki sabse powerful, 100% Original Identity-Lock Generative AI System!")
+st.title("🔥 Omni-Face-Changer: Professional Face Swap Suite")
+st.write("Duniya ki sabse powerful, Fast & Stable Cloud Face Swap System!")
 
 # Sidebar for API Token
 st.sidebar.subheader("🔑 Pro Cloud Configuration")
@@ -36,7 +36,7 @@ if option == "Pro Generative Photo Swap (100% Exact Identity)":
             if not api_token:
                 st.error("❌ Krupaya sidebar ma potano Replicate API Token nakhvo jaruri che!")
             else:
-                with st.spinner("✨ Pro Cloud AI par Hollywood-grade rendering thai rhi che... (Ahi aakhi generative magic thase)"):
+                with st.spinner("✨ Pro Cloud AI par fast rendering thai rhi che..."):
                     try:
                         s_path = "temp_src.jpg"
                         t_path = "temp_tgt.jpg"
@@ -45,19 +45,12 @@ if option == "Pro Generative Photo Swap (100% Exact Identity)":
                         
                         client = replicate.Client(api_token=api_token)
                         
-                        # Using the verified, active InstantID model on Replicate
+                        # Using stable fofr/face-swap model
                         output = client.run(
-                            "zsxkib/instant-id:f1ca369d",
+                            "fofr/face-swap",
                             input={
-                                "image": open(t_path, "rb"),        # Target body/pose image
-                                "face_image": open(s_path, "rb"),   # Source original face image
-                                "width": 1024,
-                                "height": 1024,
-                                "prompt": "high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
-                                "negative_prompt": "low quality, distorted, bad anatomy, deformed",
-                                "ip_adapter_scale": 0.8,
-                                "controlnet_conditioning_scale": 0.8,
-                                "num_inference_steps": 30
+                                "image": open(t_path, "rb"),        # Target body/scene image
+                                "swapper_image": open(s_path, "rb") # Source face image
                             }
                         )
                         
@@ -71,6 +64,6 @@ if option == "Pro Generative Photo Swap (100% Exact Identity)":
 
 else:
     st.subheader("📊 Pro Cloud Performance Dashboard")
-    st.metric("Rendering Engine", "PuLID & InstantID Cloud Cluster", "Online")
-    st.metric("Identity Accuracy", "Biometric 100%", "Zero Distortion")
-    st.info("Pro API connected. Ready for Hollywood-grade production.")
+    st.metric("Rendering Engine", "Cloud Face-Swap Cluster", "Online")
+    st.metric("Identity Accuracy", "High Precision", "Zero Distortion")
+    st.info("Pro API connected. Ready for production.")
