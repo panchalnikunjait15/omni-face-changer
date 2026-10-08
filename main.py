@@ -45,9 +45,9 @@ if option == "Pro Generative Photo Swap (100% Exact Identity)":
                         
                         client = replicate.Client(api_token=api_token)
                         
-                        # Updated model string without outdated hash to automatically use latest active version
+                        # Using the verified, active InstantID model on Replicate
                         output = client.run(
-                            "instantx/instantid",
+                            "zsxkib/instant-id:f1ca369d",
                             input={
                                 "image": open(t_path, "rb"),        # Target body/pose image
                                 "face_image": open(s_path, "rb"),   # Source original face image
@@ -55,7 +55,8 @@ if option == "Pro Generative Photo Swap (100% Exact Identity)":
                                 "height": 1024,
                                 "prompt": "high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
                                 "negative_prompt": "low quality, distorted, bad anatomy, deformed",
-                                "id_weight": 1.2,
+                                "ip_adapter_scale": 0.8,
+                                "controlnet_conditioning_scale": 0.8,
                                 "num_inference_steps": 30
                             }
                         )
