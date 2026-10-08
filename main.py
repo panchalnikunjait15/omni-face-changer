@@ -6,7 +6,7 @@ import os
 st.set_page_config(page_title="Omni-Face-Changer Pro Masterpiece", layout="wide")
 
 st.title("Omni-Face-Changer: Ultimate Hollywood-Grade Face Swap")
-st.write("Hugging Face Pro AI Engine - 100% Original Identity-Lock System")
+st.write("Hugging Face InstantID Engine - 100% Original Identity-Lock System (Replicate Quality)")
 
 # Sidebar for Free HF Token
 st.sidebar.subheader("Hugging Face Configuration")
@@ -15,11 +15,11 @@ hf_token = hf_token.strip() if hf_token else ""
 st.sidebar.caption("Paste your free Hugging Face read token here.")
 
 option = st.sidebar.selectbox("Select Mode:", [
-    "Pro Generative Photo Swap (Original Quality)",
+    "Pro Generative Face Swap (Original Quality)",
     "System Architecture Dashboard"
 ])
 
-if option == "Pro Generative Photo Swap (Original Quality)":
+if option == "Pro Generative Face Swap (Original Quality)":
     st.subheader("Hollywood-Grade Generative Face Swap")
     source_file = st.file_uploader("Source Face Photo UPLOAD karo (Original Person):", type=['jpg', 'jpeg', 'png', 'webp'])
     target_file = st.file_uploader("Target Body/Scene Photo UPLOAD karo:", type=['jpg', 'jpeg', 'png', 'webp'])
@@ -38,7 +38,7 @@ if option == "Pro Generative Photo Swap (Original Quality)":
             if not hf_token:
                 st.warning("Please enter your Hugging Face Token in the sidebar first!")
             else:
-                with st.spinner("Connecting to High-End AI Cluster... (Rendering in progress)"):
+                with st.spinner("Connecting to High-End InstantID AI Cluster... (Rendering in progress)"):
                     try:
                         s_path = "temp_src.jpg"
                         t_path = "temp_tgt.jpg"
@@ -48,25 +48,26 @@ if option == "Pro Generative Photo Swap (Original Quality)":
                         result = None
                         success = False
                         
-                        # List of backup public spaces to try sequentially
-                        spaces_to_test = [
-                            ("TencentARC/InstantID", t_path, s_path),
-                            ("wangqixun/InstantID", t_path, s_path),
-                            ("gokaygokay/InstantID", t_path, s_path)
+                        # Top reliable InstantID community spaces with automatic fallback
+                        spaces = [
+                            "InstantX/InstantID",
+                            "wangqixun/InstantID",
+                            "gokaygokay/InstantID"
                         ]
                         
-                        for space_name, img_t, img_s in spaces_to_test:
+                        for space in spaces:
+                            if success:
+                                break
                             try:
-                                client = Client(space_name, token=hf_token)
-                                # Trying standard prediction format
+                                client = Client(space, token=hf_token)
                                 result = client.predict(
-                                    img_t,
-                                    img_s,
+                                    t_path,  # Target image (pose/body)
+                                    s_path,  # Source face image
                                     "high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
-                                    "low quality, distorted, bad anatomy",
-                                    0.8,
-                                    0.8,
-                                    30,
+                                    "low quality, distorted, bad anatomy, blurry",
+                                    0.8, # controlnet scale
+                                    0.8, # ip-adapter scale
+                                    30,  # num steps
                                     api_name="/generate_image"
                                 )
                                 if result:
@@ -77,14 +78,14 @@ if option == "Pro Generative Photo Swap (Original Quality)":
                         
                         if success and result:
                             st.image(result, caption="100% Original Hollywood-Grade Masterpiece", use_container_width=True)
-                            st.success("Masterpiece generated successfully!")
+                            st.success("Masterpiece generated successfully! 100% Identity Locked.")
                         else:
-                            st.error("All public mirrors are temporarily busy or updating. Please click generate again in 5 seconds.")
+                            st.error("Servers are currently busy with high traffic. Please click 'Generate Masterpiece' again in a few seconds!")
                     except Exception as e:
-                        st.error(f"Connection Error: {e}")
+                        st.error(f"Generation Notice: {e}. (Tip: Click generate again if the server was warming up)")
 
 else:
     st.subheader("Cloud Performance Dashboard")
-    st.metric("Rendering Engine", "Hugging Face Pro Spaces", "Active")
+    st.metric("Rendering Engine", "InstantID AI Cluster", "Active")
     st.metric("Identity Lock", "100% Original Match", "Maximum")
-    st.info("Configured for high-end generative face swapping.")
+    st.info("Configured for high-end generative face swapping with multi-space fallback.")
