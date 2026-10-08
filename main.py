@@ -83,16 +83,15 @@ option = st.sidebar.selectbox(mode_label, [
     "Standalone .EXE App Builder"
 ])
 
-# Advanced Color Correction and Seamless Blending for Pure Original Look
-def apply_seamless_blend(target_img, swapped_img, face_bbox):
-    x1, y1, x2, y2 = map(int, face_bbox)
-    h, w, _ = target_img.shape
-    x1, y1 = max(0, x1), max(0, y1)
-    x2, y2 = min(w, x2), min(h, y2)
-    center = ((x1 + x2) // 2, (y1 + y2) // 2)
-    
+# Advanced Number-1 Realistic Blending with Inner-Face Masking & Color Matching
+def apply_number1_realistic_blend(target_img, swapped_img, face):
     try:
-        # Match color tone and lighting of swapped face region with target face region
+        x1, y1, x2, y2 = map(int, face.bbox)
+        h, w, _ = target_img.shape
+        x1, y1 = max(0, x1), max(0, y1)
+        x2, y2 = min(w, x2), min(h, y2)
+        
+        # 1. Advanced LAB Color Correction to match lighting and skin tone
         target_face_crop = target_img[y1:y2, x1:x2]
         swapped_face_crop = swapped_img[y1:y2, x1:x2]
         if target_face_crop.size > 0 and swapped_face_crop.size > 0:
@@ -106,19 +105,27 @@ def apply_seamless_blend(target_img, swapped_img, face_bbox):
             corrected_face = cv2.cvtColor(s_lab, cv2.COLOR_LAB2BGR)
             swapped_img[y1:y2, x1:x2] = corrected_face
 
-        output = cv2.seamlessClone(swapped_img, target_img, get_face_mask(swapped_img, (x1, y1, x2, y2)), center, cv2.NORMAL_CLONE)
+        # 2. Skin detail enhancement (Sharpening without plastic look)
+        swapped_img[y1:y2, x1:x2] = cv2.detailEnhance(swapped_img[y1:y2, x1:x2], sigma_s=10, sigma_r=0.15)
+
+        # 3. Precise Inner-Face Masking using facial landmarks (kps) to preserve ears & hair
+        mask = np.zeros((h, w), dtype=np.uint8)
+        if hasattr(face, 'kps') and face.kps is not None:
+            pts = face.kps.astype(np.int32)
+            hull = cv2.convexHull(pts)
+            cv2.fillConvexPoly(mask, hull, 255)
+            mask = cv2.GaussianBlur(mask, (25, 25), 15)
+        else:
+            center = ((x1 + x2) // 2, (y1 + y2) // 2)
+            axes = ((x2 - x1) // 2 - 5, (y2 - y1) // 2 - 5)
+            cv2.ellipse(mask, center, axes, 0, 0, 360, 255, -1)
+            mask = cv2.GaussianBlur(mask, (15, 15), 10)
+
+        mask_3d = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR) / 255.0
+        output = (swapped_img * mask_3d + target_img * (1 - mask_3d)).astype(np.uint8)
         return output
     except Exception:
         return swapped_img
-
-def get_face_mask(img, bbox):
-    mask = np.zeros(img.shape[:2], dtype=np.uint8)
-    x1, y1, x2, y2 = bbox
-    center = ((x1 + x2) // 2, (y1 + y2) // 2)
-    axes = ((x2 - x1) // 2 - 5, (y2 - y1) // 2 - 5)
-    cv2.ellipse(mask, center, axes, 0, 0, 360, 255, -1)
-    mask = cv2.GaussianBlur(mask, (15, 15), 10)
-    return mask
 
 if option == "Image Face Swap (Ultra-Realistic)":
     st.subheader("📸 100% Undetectable Ultra-Realistic Photo Swap")
@@ -136,18 +143,18 @@ if option == "Image Face Swap (Ultra-Realistic)":
             res_img = t_img.copy()
             for face in t_faces:
                 res_img = swapper.get(res_img, face, s_faces[0], paste_back=True)
-                res_img = apply_seamless_blend(t_img, res_img, face.bbox)
+                res_img = apply_number1_realistic_blend(t_img, res_img, face)
             
             res_rgb = cv2.cvtColor(res_img, cv2.COLOR_BGR2RGB)
-            st.image(res_rgb, caption="✨ 100% Pure & Natural Seamless Face Swap", use_container_width=True)
-            st.success("🎉 Face Swap Successfully Completed with Natural Lighting & Edges!")
+            st.image(res_rgb, caption="✨ 100% Pure, Original & Undetectable Face Swap", use_container_width=True)
+            st.success("🎉 Number-1 Professional Face Swap Completed Successfully!")
         else:
             st.error("❌ Face detect nathi thayo! Saro photo upload karo.")
 
 elif option == "Video Face Swap":
     st.subheader("🎥 Advanced Video Face Swap Module")
-    source_vid_photo = st.file_uploader("Source Face Photo UPLOAD karo (Jiska face lagana hai):", type=['jpg', 'jpeg', 'png', 'webp'], key="v_src")
-    target_video = st.file_uploader("Target Video UPLOAD karo (Jis video par face swap karna hai):", type=['mp4', 'avi', 'mov', 'webm'], key="v_tgt")
+    source_vid_photo = st.file_uploader("Source Face Photo UPLOAD karo:", type=['jpg', 'jpeg', 'png', 'webp'], key="v_src")
+    target_video = st.file_uploader("Target Video UPLOAD karo:", type=['mp4', 'avi', 'mov', 'webm'], key="v_tgt")
     
     if source_vid_photo and target_video and app and swapper:
         s_img = cv2.imdecode(np.frombuffer(source_vid_photo.read(), np.uint8), 1)
@@ -182,7 +189,7 @@ elif option == "Video Face Swap":
                 if len(t_faces) > 0:
                     for face in t_faces:
                         res_frame = swapper.get(res_frame, face, s_faces[0], paste_back=True)
-                        res_frame = apply_seamless_blend(frame, res_frame, face.bbox)
+                        res_frame = apply_number1_realistic_blend(frame, res_frame, face)
                 
                 out.write(res_frame)
                 frame_idx += 1
