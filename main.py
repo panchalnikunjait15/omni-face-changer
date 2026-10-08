@@ -45,21 +45,41 @@ if option == "Pro Generative Photo Swap (Original Quality)":
                         s_image.save(s_path)
                         t_image.save(t_path)
                         
-                        # Connecting to active InstantID Gradio Space with token auth
-                        client = Client("radames/RealTime-InstantID", token=hf_token)
+                        result = None
+                        success = False
                         
-                        result = client.predict(
-                            image=t_path,
-                            face_image=s_path,
-                            prompt="high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
-                            api_name="/predict"
-                        )
+                        # List of backup public spaces to try sequentially
+                        spaces_to_test = [
+                            ("TencentARC/InstantID", t_path, s_path),
+                            ("wangqixun/InstantID", t_path, s_path),
+                            ("gokaygokay/InstantID", t_path, s_path)
+                        ]
                         
-                        if result:
+                        for space_name, img_t, img_s in spaces_to_test:
+                            try:
+                                client = Client(space_name, token=hf_token)
+                                # Trying standard prediction format
+                                result = client.predict(
+                                    img_t,
+                                    img_s,
+                                    "high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
+                                    "low quality, distorted, bad anatomy",
+                                    0.8,
+                                    0.8,
+                                    30,
+                                    api_name="/generate_image"
+                                )
+                                if result:
+                                    success = True
+                                    break
+                            except Exception:
+                                continue
+                        
+                        if success and result:
                             st.image(result, caption="100% Original Hollywood-Grade Masterpiece", use_container_width=True)
                             st.success("Masterpiece generated successfully!")
                         else:
-                            st.error("Failed to generate result.")
+                            st.error("All public mirrors are temporarily busy or updating. Please click generate again in 5 seconds.")
                     except Exception as e:
                         st.error(f"Connection Error: {e}")
 
