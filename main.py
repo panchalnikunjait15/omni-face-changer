@@ -2,12 +2,11 @@ import streamlit as st
 from PIL import Image
 from gradio_client import Client
 import os
-import time
 
 st.set_page_config(page_title="Omni-Face-Changer Pro Masterpiece", layout="wide")
 
 st.title("Omni-Face-Changer: Ultimate Hollywood-Grade Face Swap")
-st.write("Hugging Face InstantID Engine - 100% Original Identity-Lock System")
+st.write("Official InstantX Direct Engine - 100% Original Identity-Lock System")
 
 # Sidebar for Free HF Token
 st.sidebar.subheader("Hugging Face Configuration")
@@ -20,7 +19,7 @@ option = st.sidebar.selectbox("Select Mode:", [
     "System Architecture Dashboard"
 ])
 
-if option == "Pro Generative Photo Swap (Original Quality)":
+if option == "Pro Generative Face Swap (Original Quality)":
     st.subheader("Hollywood-Grade Generative Face Swap")
     source_file = st.file_uploader("Source Face Photo UPLOAD karo (Original Person):", type=['jpg', 'jpeg', 'png', 'webp'])
     target_file = st.file_uploader("Target Body/Scene Photo UPLOAD karo:", type=['jpg', 'jpeg', 'png', 'webp'])
@@ -44,57 +43,37 @@ if option == "Pro Generative Photo Swap (Original Quality)":
                 s_image.save(s_path)
                 t_image.save(t_path)
                 
-                result = None
-                success = False
-                
-                # Active and verified InstantID public spaces
-                active_spaces = [
-                    "TencentARC/InstantID",
-                    "gokaygokay/InstantID"
-                ]
-                
-                with st.status("Connecting to Live AI Clusters...", expanded=True) as status:
-                    for space in active_spaces:
-                        if success:
-                            break
-                        st.write(f"Checking mirror: `{space}`...")
+                with st.status("Connecting to Official InstantX AI Cluster...", expanded=True) as status:
+                    st.write("Establishing direct secure connection to InstantX Space...")
+                    try:
+                        # Direct connection using the full official Hugging Face Space URL
+                        client = Client("https://huggingface.co/spaces/InstantX/InstantID", token=hf_token)
+                        st.write("Rendering Hollywood-grade face swap & cinematic lighting...")
                         
-                        for attempt in range(1, 4):
-                            try:
-                                client = Client(space, token=hf_token)
-                                st.write(f"Attempt {attempt}: Rendering high-end face swap...")
-                                
-                                result = client.predict(
-                                    t_path,  # Target image (pose/body)
-                                    s_path,  # Source face image
-                                    "high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
-                                    "low quality, distorted, bad anatomy, blurry",
-                                    0.8, # controlnet scale
-                                    0.8, # ip-adapter scale
-                                    30,  # num steps
-                                    api_name="/generate_image"
-                                )
-                                
-                                if result:
-                                    success = True
-                                    status.update(label="Masterpiece generated successfully! 100% Identity Locked.", state="complete", expanded=False)
-                                    break
-                            except Exception as e:
-                                st.write(f"Server busy or warming up. Retrying...")
-                                time.sleep(3)
-                                continue
-                    
-                    if not success:
-                        status.update(label="Servers are temporarily busy.", state="error", expanded=True)
-                
-                if success and result:
-                    st.image(result, caption="100% Original Hollywood-Grade Masterpiece", use_container_width=True)
-                    st.success("Masterpiece rendered with 100% original identity match!")
-                else:
-                    st.error("Servers are currently experiencing high traffic. Please click 'Generate Masterpiece' again!")
+                        result = client.predict(
+                            t_path,  # Target image (pose/body)
+                            s_path,  # Source face image
+                            "high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
+                            "low quality, distorted, bad anatomy, blurry",
+                            0.8, # controlnet scale
+                            0.8, # ip-adapter scale
+                            30,  # num steps
+                            api_name="/generate_image"
+                        )
+                        
+                        if result:
+                            status.update(label="Masterpiece generated successfully! 100% Identity Locked.", state="complete", expanded=False)
+                            st.image(result, caption="100% Original Hollywood-Grade Masterpiece", use_container_width=True)
+                            st.success("Masterpiece rendered with 100% original identity match!")
+                        else:
+                            status.update(label="Generation returned empty result.", state="error", expanded=True)
+                            st.error("Server returned an empty response. Please try again.")
+                    except Exception as e:
+                        status.update(label="Connection Error Encountered", state="error", expanded=True)
+                        st.error(f"Error: {e}. (Tip: Ensure your HF Token is correct and you are logged into Hugging Face)")
 
 else:
     st.subheader("Cloud Performance Dashboard")
-    st.metric("Rendering Engine", "Live Verified Cluster", "Active")
+    st.metric("Rendering Engine", "Official InstantX Space", "Active")
     st.metric("Identity Lock", "100% Original Match", "Maximum")
-    st.info("Configured with clean, active public endpoints.")
+    st.info("Configured with direct URL endpoint routing.")
