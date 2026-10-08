@@ -83,14 +83,29 @@ option = st.sidebar.selectbox(mode_label, [
     "Standalone .EXE App Builder"
 ])
 
-# Seamless Blending Helper Functions for Pure Original Edges
+# Advanced Color Correction and Seamless Blending for Pure Original Look
 def apply_seamless_blend(target_img, swapped_img, face_bbox):
     x1, y1, x2, y2 = map(int, face_bbox)
     h, w, _ = target_img.shape
     x1, y1 = max(0, x1), max(0, y1)
     x2, y2 = min(w, x2), min(h, y2)
     center = ((x1 + x2) // 2, (y1 + y2) // 2)
+    
     try:
+        # Match color tone and lighting of swapped face region with target face region
+        target_face_crop = target_img[y1:y2, x1:x2]
+        swapped_face_crop = swapped_img[y1:y2, x1:x2]
+        if target_face_crop.size > 0 and swapped_face_crop.size > 0:
+            t_lab = cv2.cvtColor(target_face_crop, cv2.COLOR_BGR2LAB).astype("float32")
+            s_lab = cv2.cvtColor(swapped_face_crop, cv2.COLOR_BGR2LAB).astype("float32")
+            for i in range(3):
+                s_mean, s_std = s_lab[:,:,i].mean(), s_lab[:,:,i].std()
+                t_mean, t_std = t_lab[:,:,i].mean(), t_lab[:,:,i].std()
+                s_lab[:,:,i] = ((s_lab[:,:,i] - s_mean) * (t_std / (s_std + 1e-5))) + t_mean
+            s_lab = np.clip(s_lab, 0, 255).astype("uint8")
+            corrected_face = cv2.cvtColor(s_lab, cv2.COLOR_LAB2BGR)
+            swapped_img[y1:y2, x1:x2] = corrected_face
+
         output = cv2.seamlessClone(swapped_img, target_img, get_face_mask(swapped_img, (x1, y1, x2, y2)), center, cv2.NORMAL_CLONE)
         return output
     except Exception:
@@ -124,8 +139,8 @@ if option == "Image Face Swap (Ultra-Realistic)":
                 res_img = apply_seamless_blend(t_img, res_img, face.bbox)
             
             res_rgb = cv2.cvtColor(res_img, cv2.COLOR_BGR2RGB)
-            st.image(res_rgb, caption="✨ Pure & Natural Seamless Face Swap", use_container_width=True)
-            st.success("🎉 Face Swap Successfully Completed with Natural Edges!")
+            st.image(res_rgb, caption="✨ 100% Pure & Natural Seamless Face Swap", use_container_width=True)
+            st.success("🎉 Face Swap Successfully Completed with Natural Lighting & Edges!")
         else:
             st.error("❌ Face detect nathi thayo! Saro photo upload karo.")
 
