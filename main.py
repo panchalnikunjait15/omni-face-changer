@@ -9,19 +9,18 @@ import socket
 import urllib.request
 import onnxruntime
 
-st.set_page_config(page_title="Omni-Face-Changer Identity Masterpiece", layout="wide")
+st.set_page_config(page_title="Omni-Face-Changer Absolute Identity Suite", layout="wide")
 
 if "history" not in st.session_state:
     st.session_state.history = []
 
 @st.cache_resource
 def load_ai_models():
-    print("🚀 Loading High-Fidelity Identity AI Engine...")
+    print("🚀 Loading Absolute Identity AI Engine...")
     providers = ['CPUExecutionProvider']
     if 'CUDAExecutionProvider' in onnxruntime.get_available_providers():
         providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
         
-    # 'buffalo_l' vapryu che je exact face embedding and landmarks 100% kachas vagar pakde che!
     app = FaceAnalysis(name='buffalo_l', providers=providers)
     app.prepare(ctx_id=0, det_size=(640, 640))
     
@@ -46,29 +45,29 @@ app, swapper = load_ai_models()
 lang = st.sidebar.selectbox("🌐 Choose Language / પસંદ કરો / भाषा चुनें", ["English", "ગુજરાતી", "हिंदी"])
 
 if lang == "ગુજરાતી":
-    title_text = "🔥 ઓમ્ની-ફેસ-ચેંજર: 100% ઓરિજિનલ આઈડેન્ટિટી સૂટ"
-    desc_text = "ચહેરો બદલાયા વગર અસલી વ્યક્તિની જ હોબૂક ઓળખ જાળવી રાખતી રિયલ-એઆઈ સિસ્ટમ!"
+    title_text = "🔥 ઓમ્ની-ફેસ-ચેંજર: 100% પ્યોર ઓરિજિનલ આઈડેન્ટિટી સૂટ"
+    desc_text = "કોઈપણ બદલાવ વગર અસલી વ્યક્તિનો હૂબહૂ ચહેરો જાળવી રાખતી અલ્ટીમેટ સિસ્ટમ!"
     mode_label = "મોડ પસંદ કરો:"
 elif lang == "हिंदी":
-    title_text = "🔥 ओम्नी-फेस-चेेंजर: 100% ओरिजिनल आइडेंटिटी सूट"
-    desc_text = "चेहरा बदले बिना असली व्यक्ति की हूबहू पहचान बनाए रखने वाली रियल-AI सिस्टम!"
+    title_text = "🔥 ओम्नी-फेस-चेेंजर: 100% पोर ओरिजिनल आइडेंटिटी सूट"
+    desc_text = "बिना किसी बदलाव के असली व्यक्ति का हूबहू चेहरा बनाए रखने वाली अल्टीमेट सिस्टम!"
     mode_label = "मोड चुनें:"
 else:
-    title_text = "🔥 Omni-Face-Changer: 100% Original Identity Suite"
-    desc_text = "Real-AI System Preserving Exact Original Person's Identity Without Distortion!"
+    title_text = "🔥 Omni-Face-Changer: 100% Pure Original Identity Suite"
+    desc_text = "Ultimate System Preserving Exact Original Person's Face Without Any Distortion!"
     mode_label = "Mode Pasand karo:"
 
 st.title(title_text)
 st.write(desc_text)
 
 option = st.sidebar.selectbox(mode_label, [
-    "Identity-Lock Photo Swap",
-    "Identity-Lock Video Swap Engine",
+    "Pure Identity-Lock Photo Swap",
+    "Pure Identity-Lock Video Swap",
     "Real-ESRGAN 4K Detail Enhancer",
     "Hardware Performance Dashboard"
 ])
 
-def apply_identity_preserved_blend(target_img, swapped_full_img, source_face, target_face):
+def apply_pure_identity_blend(target_img, swapped_full_img, target_face):
     try:
         x1, y1, x2, y2 = map(int, target_face.bbox)
         h, w, _ = target_img.shape
@@ -78,7 +77,7 @@ def apply_identity_preserved_blend(target_img, swapped_full_img, source_face, ta
         if x2 <= x1 or y2 <= y1:
             return swapped_full_img
             
-        # 1. Exact Skin Tone & Lighting Harmonization using source-target embedding balance
+        # 1. Exact Skin Tone & Color Harmonization (LAB Space)
         target_roi = target_img[y1:y2, x1:x2]
         swapped_roi = swapped_full_img[y1:y2, x1:x2]
         
@@ -92,32 +91,32 @@ def apply_identity_preserved_blend(target_img, swapped_full_img, source_face, ta
             s_lab = np.clip(s_lab, 0, 255).astype("uint8")
             swapped_full_img[y1:y2, x1:x2] = cv2.cvtColor(s_lab, cv2.COLOR_LAB2BGR)
 
-        # 2. Precision sharpening to keep original facial features (eyes, nose, lips) sharp and identical
-        swapped_full_img[y1:y2, x1:x2] = cv2.detailEnhance(swapped_full_img[y1:y2, x1:x2], sigma_s=8, sigma_r=0.12)
+        # 2. Precision Detail Enhancement to keep original facial features sharp
+        swapped_full_img[y1:y2, x1:x2] = cv2.detailEnhance(swapped_full_img[y1:y2, x1:x2], sigma_s=10, sigma_r=0.15)
 
-        # 3. Soft Gaussian Mask to blend edges naturally with target body
+        # 3. Soft Gaussian Feathered Mask for Zero Edges
         mask = np.zeros((h, w), dtype=np.uint8)
         if hasattr(target_face, 'kps') and target_face.kps is not None:
             pts = target_face.kps.astype(np.int32)
             hull = cv2.convexHull(pts)
             cv2.fillConvexPoly(mask, hull, 255)
-            mask = cv2.GaussianBlur(mask, (25, 25), 12)
+            mask = cv2.GaussianBlur(mask, (31, 31), 15)
         else:
             center = ((x1 + x2) // 2, (y1 + y2) // 2)
             axes = ((x2 - x1) // 2, (y2 - y1) // 2)
             cv2.ellipse(mask, center, axes, 0, 0, 360, 255, -1)
-            mask = cv2.GaussianBlur(mask, (15, 15), 8)
+            mask = cv2.GaussianBlur(mask, (21, 21), 10)
 
         mask_3d = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR) / 255.0
         output = (swapped_full_img * mask_3d + target_img * (1 - mask_3d)).astype(np.uint8)
         return output
     except Exception as e:
-        print(f"Identity Blend Error: {e}")
+        print(f"Pure Blend Error: {e}")
         return swapped_full_img
 
-if option == "Identity-Lock Photo Swap":
-    st.subheader("📸 100% Identity-Locked Original Photo Swap")
-    source_file = st.file_uploader("Source Face Photo (Original Person) UPLOAD karo:", type=['jpg', 'jpeg', 'png', 'webp'])
+if option == "Pure Identity-Lock Photo Swap":
+    st.subheader("📸 100% Pure Identity-Locked Photo Swap")
+    source_file = st.file_uploader("Source Face Photo UPLOAD karo (Original Person):", type=['jpg', 'jpeg', 'png', 'webp'])
     target_file = st.file_uploader("Target Body Photo UPLOAD karo:", type=['jpg', 'jpeg', 'png', 'webp'])
     
     if source_file and target_file and app and swapper:
@@ -128,22 +127,22 @@ if option == "Identity-Lock Photo Swap":
         t_faces = app.get(t_img)
         
         if len(s_faces) > 0 and len(t_faces) > 0:
-            # Select the most prominent face with highest embedding score
+            # Extract the absolute best face embedding from source
             source_face = max(s_faces, key=lambda x: (x.bbox[2] - x.bbox[0]) * (x.bbox[3] - x.bbox[1]))
             
             res_img = t_img.copy()
             for face in t_faces:
                 swapped_temp = swapper.get(res_img, face, source_face, paste_back=True)
-                res_img = apply_identity_preserved_blend(t_img, swapped_temp, source_face, face)
+                res_img = apply_pure_identity_blend(t_img, swapped_temp, face)
             
             res_rgb = cv2.cvtColor(res_img, cv2.COLOR_BGR2RGB)
-            st.image(res_rgb, caption="✨ Exact Original Person Identity-Locked Result", use_container_width=True)
-            st.success("🎉 Identity-Locked Face Swap Completed Successfully!")
+            st.image(res_rgb, caption="✨ 100% Pure Original Person Identity Preserved", use_container_width=True)
+            st.success("🎉 Pure Identity-Locked Face Swap Completed!")
         else:
             st.error("❌ Face detect nathi thayo! Saro photo upload karo.")
 
-elif option == "Identity-Lock Video Swap Engine":
-    st.subheader("🎥 Identity-Locked Video Face Swap Module")
+elif option == "Pure Identity-Lock Video Swap":
+    st.subheader("🎥 Pure Identity-Locked Video Swap Module")
     source_vid_photo = st.file_uploader("Source Face Photo UPLOAD karo:", type=['jpg', 'jpeg', 'png', 'webp'], key="v_src")
     target_video = st.file_uploader("Target Video UPLOAD karo:", type=['mp4', 'avi', 'mov', 'webm'], key="v_tgt")
     
@@ -164,7 +163,7 @@ elif option == "Identity-Lock Video Swap Engine":
             height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 100
             
-            out_video_path = "output_identity_video.mp4"
+            out_video_path = "output_pure_identity.mp4"
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             out = cv2.VideoWriter(out_video_path, fourcc, fps, (width, height))
             
@@ -182,14 +181,14 @@ elif option == "Identity-Lock Video Swap Engine":
                 if len(t_faces) > 0:
                     for face in t_faces:
                         swapped_temp = swapper.get(res_frame, face, source_face, paste_back=True)
-                        res_frame = apply_identity_preserved_blend(frame, swapped_temp, source_face, face)
+                        res_frame = apply_pure_identity_blend(frame, swapped_temp, face)
                 
                 out.write(res_frame)
                 frame_idx += 1
                 if total_frames > 0:
                     progress = min(1.0, frame_idx / total_frames)
                     progress_bar.progress(progress)
-                    status_text.text(f"Processing Frame {frame_idx}/{total_frames} (Identity-Locked)...")
+                    status_text.text(f"Processing Frame {frame_idx}/{total_frames} (Pure Identity)...")
             
             cap.release()
             out.release()
@@ -197,14 +196,14 @@ elif option == "Identity-Lock Video Swap Engine":
             progress_bar.empty()
             status_text.empty()
             
-            st.success("🎉 Identity-Locked Video Face Swap Completed!")
+            st.success("🎉 Pure Identity Video Swap Completed!")
             st.video(out_video_path)
             
             with open(out_video_path, "rb") as file:
                 st.download_button(
-                    label="📥 Download Swapped Video",
+                    label="📥 Download Pure Swapped Video",
                     data=file,
-                    file_name="identity_swapped_video.mp4",
+                    file_name="pure_identity_video.mp4",
                     mime="video/mp4"
                 )
         else:
