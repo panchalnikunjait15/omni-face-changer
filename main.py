@@ -11,6 +11,7 @@ st.write("Hugging Face Pro AI Engine - 100% Original Identity-Lock System (Free)
 # Sidebar for Free HF Token
 st.sidebar.subheader("Hugging Face Configuration")
 hf_token = st.sidebar.text_input("Enter Free HF Token:", type="password")
+hf_token = hf_token.strip() if hf_token else ""
 st.sidebar.caption("Paste your free Hugging Face read token here.")
 
 option = st.sidebar.selectbox("Select Mode:", [
@@ -39,7 +40,8 @@ if option == "Pro Generative Photo Swap (Original Quality)":
             else:
                 with st.spinner("Connecting to High-End AI Cluster... (Rendering in progress)"):
                     try:
-                        os.environ["HF_TOKEN"] = hf_token
+                        if hf_token:
+                            os.environ["HF_TOKEN"] = hf_token
                         
                         s_path = "temp_src.jpg"
                         t_path = "temp_tgt.jpg"
@@ -47,30 +49,31 @@ if option == "Pro Generative Photo Swap (Original Quality)":
                         t_image.save(t_path)
                         
                         result = None
-                        # Trying primary high-performance community spaces
+                        
+                        # Trying InstantX/InstantID with positional parameters
                         try:
-                            client = Client("tiledb/InstantID") # or stable community mirror
+                            client = Client("InstantX/InstantID")
                             result = client.predict(
-                                input_image=t_path,
-                                image_fah=s_path,
-                                prompt="high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
-                                negative_prompt="low quality, distorted, bad anatomy",
-                                controlnet_conditioning_scale=0.8,
-                                ip_adapter_scale=0.8,
-                                num_steps=30,
+                                t_path,  # input_image / target pose image
+                                s_path,  # image_fah / source face image
+                                "high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
+                                "low quality, distorted, bad anatomy",
+                                0.8,
+                                0.8,
+                                30,
                                 api_name="/generate_image"
                             )
-                        except Exception:
-                            # Fallback to secondary active space
-                            client_alt = Client("InstantX/InstantID")
+                        except Exception as e1:
+                            # Fallback to alternative space with positional parameters
+                            client_alt = Client("tiledb/InstantID")
                             result = client_alt.predict(
-                                input_image=t_path,
-                                image_fah=s_path,
-                                prompt="high quality, cinematic portrait, detailed lighting",
-                                negative_prompt="low quality, blurry",
-                                controlnet_conditioning_scale=0.8,
-                                ip_adapter_scale=0.8,
-                                num_steps=25,
+                                t_path,
+                                s_path,
+                                "high quality, professional portrait, cinematic lighting",
+                                "low quality, blurry",
+                                0.8,
+                                0.8,
+                                30,
                                 api_name="/generate_image"
                             )
                         
@@ -78,9 +81,9 @@ if option == "Pro Generative Photo Swap (Original Quality)":
                             st.image(result, caption="100% Original Hollywood-Grade Masterpiece", use_container_width=True)
                             st.success("Masterpiece generated successfully!")
                         else:
-                            st.error("Server queue is currently full. Please click generate again in 5 seconds.")
+                            st.error("Server queue is currently full. Please click generate again.")
                     except Exception as e:
-                        st.error(f"Generation Notice: Server is warming up or busy. Please click the button again! Details: {e}")
+                        st.error(f"Generation Error: {e}")
 
 else:
     st.subheader("Cloud Performance Dashboard")
