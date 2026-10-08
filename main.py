@@ -46,16 +46,16 @@ if option == "Pro Generative Photo Swap (100% Exact Identity)":
                         s_image.save(s_path)
                         t_image.save(t_path)
                         
-                        # Running state-of-the-art InstantID / PuLID model on Replicate Cloud
-                        # Aa model face ni 100% exact identity preserve kare che
+                        # Corrected Replicate InstantID parameters (Target image as 'image', Source face as 'face_image')
                         output = replicate.run(
                             "instantx/instantid:05d5d852895696d5951664dcf589255677d24260a92d40d99ef8291410406859",
                             input={
-                                "image": open(s_path, "rb"),
+                                "image": open(t_path, "rb"),        # Target body/pose image
+                                "face_image": open(s_path, "rb"),   # Source original face image
                                 "width": 1024,
                                 "height": 1024,
                                 "prompt": "high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
-                                "face_image": open(s_path, "rb"),
+                                "negative_prompt": "low quality, distorted, bad anatomy, deformed",
                                 "id_weight": 1.2,
                                 "num_inference_steps": 30
                             }
@@ -65,7 +65,7 @@ if option == "Pro Generative Photo Swap (100% Exact Identity)":
                             st.image(output, caption="✨ 100% Original Identity-Locked Masterpiece", use_container_width=True)
                             st.success("🎉 Duniya se alag, ekdam real result taiyar che!")
                         else:
-                            st.error("❌ Generation fail thayu.")
+                            st.error("❌ Result generate nathi thayo.")
                     except Exception as e:
                         st.error(f"Cloud Processing Error: {e}")
 
