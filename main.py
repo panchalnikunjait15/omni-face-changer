@@ -9,14 +9,14 @@ import socket
 import urllib.request
 import onnxruntime
 
-st.set_page_config(page_title="Omni-Face-Changer 360 Masterpiece", layout="wide")
+st.set_page_config(page_title="Omni-Face-Changer Seamless Masterpiece", layout="wide")
 
 if "history" not in st.session_state:
     st.session_state.history = []
 
 @st.cache_resource
 def load_ai_models():
-    print("🚀 Loading 3D-Aware Multi-Angle AI Engine...")
+    print("🚀 Loading Seamless AI Engine...")
     providers = ['CPUExecutionProvider']
     if 'CUDAExecutionProvider' in onnxruntime.get_available_providers():
         providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
@@ -28,7 +28,7 @@ def load_ai_models():
     if not os.path.exists(model_path):
         url = "https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx"
         try:
-            with st.spinner("Downloading 3D neural core..."):
+            with st.spinner("Downloading model..."):
                 urllib.request.urlretrieve(url, model_path)
         except Exception as e:
             st.error(f"Model error: {e}")
@@ -45,78 +45,63 @@ app, swapper = load_ai_models()
 lang = st.sidebar.selectbox("🌐 Choose Language / પસંદ કરો / भाषा चुनें", ["English", "ગુજરાતી", "हिंदी"])
 
 if lang == "ગુજરાતી":
-    title_text = "🔥 ઓમ્ની-ફેસ-ચેંજર: 360° અલ્ટીમેટ માસ્ટરપીસ એન્જિન"
-    desc_text = "ગમે તેવા 360° એન્ગલ, 4-ડાયરેક્શન પોશ્ચર અને વિડિયો માટે દુનિયાનું સૌથી પાવરફુલ રિયલ-એઆઈ સૂટ!"
+    title_text = "🔥 ઓમ્ની-ફેસ-ચેંજર: સીમલેસ રિયલ માસ્ટરપીસ"
+    desc_text = "કોઈ ઓળખી જ ન શકે તેવી 100% નેચરલ અને ઓરિજિનલ ફેસ-સ્વેપિંગ સિસ્ટમ!"
     mode_label = "મોડ પસંદ કરો:"
 elif lang == "हिंदी":
-    title_text = "🔥 ओम्नी-फेस-चेेंजर: 360° अल्टीमेट मास्टरपीस इंजन"
-    desc_text = "किसी भी 360° एंगल, 4-डायरेक्शन पोश्चर और वीडियो के लिए दुनिया का सबसे पावरफुल रियल-AI सूट!"
+    title_text = "🔥 ओम्नी-फेस-चेेंजर: सीमलेस रियल मास्टरपीस"
+    desc_text = "कोई पहचान न सके ऐसी 100% नेचुरल और ओरिजिनल फेस-स्वैपिंग सिस्टम!"
     mode_label = "मोड चुनें:"
 else:
-    title_text = "🔥 Omni-Face-Changer: 360° Ultimate Masterpiece Engine"
-    desc_text = "World's Most Powerful Real-AI Suite for 360° Angles, 4-Direction Postures & Videos!"
+    title_text = "🔥 Omni-Face-Changer: Seamless Real Masterpiece"
+    desc_text = "100% Natural & Original Undetectable Face-Swapping System!"
     mode_label = "Mode Pasand karo:"
 
 st.title(title_text)
 st.write(desc_text)
 
 option = st.sidebar.selectbox(mode_label, [
-    "360° Multi-Angle Ultra Face Swap",
-    "4-Direction Dynamic Video Swap",
+    "Seamless Ultra-Realistic Photo Swap",
+    "Seamless Video Swap Engine",
     "Real-ESRGAN 4K Detail Enhancer",
-    "Holographic 3D Mesh & Pose Export",
     "Hardware Performance Dashboard"
 ])
 
-def apply_360_directional_blend(target_img, swapped_img, face):
+def apply_seamless_poisson_blend(target_img, swapped_img, face):
     try:
         x1, y1, x2, y2 = map(int, face.bbox)
         h, w, _ = target_img.shape
         x1, y1 = max(0, x1), max(0, y1)
         x2, y2 = min(w, x2), min(h, y2)
         
-        # 1. Dynamic 360-Degree Lighting & Color Normalization (LAB Space)
-        target_face_crop = target_img[y1:y2, x1:x2]
-        swapped_face_crop = swapped_img[y1:y2, x1:x2]
-        if target_face_crop.size > 0 and swapped_face_crop.size > 0:
-            t_lab = cv2.cvtColor(target_face_crop, cv2.COLOR_BGR2LAB).astype("float32")
-            s_lab = cv2.cvtColor(swapped_face_crop, cv2.COLOR_BGR2LAB).astype("float32")
-            for i in range(3):
-                s_mean, s_std = s_lab[:,:,i].mean(), s_lab[:,:,i].std()
-                t_mean, t_std = t_lab[:,:,i].mean(), t_lab[:,:,i].std()
-                s_lab[:,:,i] = ((s_lab[:,:,i] - s_mean) * (t_std / (s_std + 1e-5))) + t_mean
-            s_lab = np.clip(s_lab, 0, 255).astype("uint8")
-            corrected_face = cv2.cvtColor(s_lab, cv2.COLOR_LAB2BGR)
-            swapped_img[y1:y2, x1:x2] = corrected_face
-
-        # 2. Multi-Directional Skin Micro-Detail Sharpening (Removes plastic/fake look completely)
-        swapped_img[y1:y2, x1:x2] = cv2.detailEnhance(swapped_img[y1:y2, x1:x2], sigma_s=15, sigma_r=0.20)
-
-        # 3. 360° Adaptive Convex Hull Masking with Multi-Iteration Dilation
+        # 1. Create a precise convex hull mask from landmarks
         mask = np.zeros((h, w), dtype=np.uint8)
         if hasattr(face, 'kps') and face.kps is not None:
             pts = face.kps.astype(np.int32)
             hull = cv2.convexHull(pts)
             cv2.fillConvexPoly(mask, hull, 255)
-            kernel = np.ones((11, 11), np.uint8)
-            mask = cv2.dilate(mask, kernel, iterations=3)
-            mask = cv2.GaussianBlur(mask, (51, 51), 25)
+            kernel = np.ones((5, 5), np.uint8)
+            mask = cv2.dilate(mask, kernel, iterations=2)
         else:
-            center = ((x1 + x2) // 2, (y1 + y2) // 2)
-            axes = ((x2 - x1) // 2 - 4, (y2 - y1) // 2 - 4)
-            cv2.ellipse(mask, center, axes, 0, 0, 360, 255, -1)
-            mask = cv2.GaussianBlur(mask, (31, 31), 18)
-
-        mask_3d = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR) / 255.0
-        output = (swapped_img * mask_3d + target_img * (1 - mask_3d)).astype(np.uint8)
+            center_pt = ((x1 + x2) // 2, (y1 + y2) // 2)
+            axes = ((x2 - x1) // 2, (y2 - y1) // 2)
+            cv2.ellipse(mask, center_pt, axes, 0, 0, 360, 255, -1)
+            
+        center = ((x1 + x2) // 2, (y1 + y2) // 2)
+        
+        # 2. OpenCV Poisson Seamless Cloning (Completely removes borders, lines, and lighting mismatch)
+        output = cv2.seamlessClone(swapped_img, target_img, mask, center, cv2.NORMAL_CLONE)
+        
+        # 3. Micro-skin enhancement on the swapped region
+        output[y1:y2, x1:x2] = cv2.detailEnhance(output[y1:y2, x1:x2], sigma_s=10, sigma_r=0.15)
         return output
     except Exception:
         return swapped_img
 
-if option == "360° Multi-Angle Ultra Face Swap":
-    st.subheader("🌐 360° & Multi-Directional Real Face Swap")
+if option == "Seamless Ultra-Realistic Photo Swap":
+    st.subheader("📸 100% Undetectable Seamless Photo Swap")
     source_file = st.file_uploader("Source Face Photo UPLOAD karo:", type=['jpg', 'jpeg', 'png', 'webp'])
-    target_file = st.file_uploader("Target Photo (Any Posture/Angle) UPLOAD karo:", type=['jpg', 'jpeg', 'png', 'webp'])
+    target_file = st.file_uploader("Target Body Photo UPLOAD karo:", type=['jpg', 'jpeg', 'png', 'webp'])
     
     if source_file and target_file and app and swapper:
         s_img = cv2.imdecode(np.frombuffer(source_file.read(), np.uint8), 1)
@@ -129,18 +114,18 @@ if option == "360° Multi-Angle Ultra Face Swap":
             res_img = t_img.copy()
             for face in t_faces:
                 res_img = swapper.get(res_img, face, s_faces[0], paste_back=True)
-                res_img = apply_360_directional_blend(t_img, res_img, face)
+                res_img = apply_seamless_poisson_blend(t_img, res_img, face)
             
             res_rgb = cv2.cvtColor(res_img, cv2.COLOR_BGR2RGB)
-            st.image(res_rgb, caption="✨ 360° Real & Seamless Masterpiece Result", use_container_width=True)
-            st.success("🎉 360° Multi-Angle Face Swap Completed Successfully!")
+            st.image(res_rgb, caption="✨ 100% Seamless, Natural & Real Face Swap", use_container_width=True)
+            st.success("🎉 Seamless Face Swap Completed Successfully!")
         else:
             st.error("❌ Face detect nathi thayo! Saro photo upload karo.")
 
-elif option == "4-Direction Dynamic Video Swap":
-    st.subheader("🎥 4-Direction & 360° Video Posture Adaptation")
+elif option == "Seamless Video Swap Engine":
+    st.subheader("🎥 Seamless Video Face Swap Module")
     source_vid_photo = st.file_uploader("Source Face Photo UPLOAD karo:", type=['jpg', 'jpeg', 'png', 'webp'], key="v_src")
-    target_video = st.file_uploader("Target Video (360° Movement) UPLOAD karo:", type=['mp4', 'avi', 'mov', 'webm'], key="v_tgt")
+    target_video = st.file_uploader("Target Video UPLOAD karo:", type=['mp4', 'avi', 'mov', 'webm'], key="v_tgt")
     
     if source_vid_photo and target_video and app and swapper:
         s_img = cv2.imdecode(np.frombuffer(source_vid_photo.read(), np.uint8), 1)
@@ -157,7 +142,7 @@ elif option == "4-Direction Dynamic Video Swap":
             height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 100
             
-            out_video_path = "output_swapped_360.mp4"
+            out_video_path = "output_seamless_video.mp4"
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             out = cv2.VideoWriter(out_video_path, fourcc, fps, (width, height))
             
@@ -175,14 +160,14 @@ elif option == "4-Direction Dynamic Video Swap":
                 if len(t_faces) > 0:
                     for face in t_faces:
                         res_frame = swapper.get(res_frame, face, s_faces[0], paste_back=True)
-                        res_frame = apply_360_directional_blend(frame, res_frame, face)
+                        res_frame = apply_seamless_poisson_blend(frame, res_frame, face)
                 
                 out.write(res_frame)
                 frame_idx += 1
                 if total_frames > 0:
                     progress = min(1.0, frame_idx / total_frames)
                     progress_bar.progress(progress)
-                    status_text.text(f"Processing 360° Frame {frame_idx}/{total_frames}...")
+                    status_text.text(f"Processing Seamless Frame {frame_idx}/{total_frames}...")
             
             cap.release()
             out.release()
@@ -190,14 +175,14 @@ elif option == "4-Direction Dynamic Video Swap":
             progress_bar.empty()
             status_text.empty()
             
-            st.success("🎉 360° Video Face Swap Completed Successfully!")
+            st.success("🎉 Seamless Video Face Swap Completed!")
             st.video(out_video_path)
             
             with open(out_video_path, "rb") as file:
                 st.download_button(
-                    label="📥 Download 360° Swapped Video",
+                    label="📥 Download Seamless Video",
                     data=file,
-                    file_name="360_face_swapped_video.mp4",
+                    file_name="seamless_swapped_video.mp4",
                     mime="video/mp4"
                 )
         else:
