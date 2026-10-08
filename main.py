@@ -5,7 +5,7 @@ import os
 
 st.set_page_config(page_title="Omni-Face-Changer Free Pro Masterpiece", layout="wide")
 
-st.title("Omni-Face-Changer: 100 Free Hollywood-Grade Face Swap")
+st.title("Omni-Face-Changer: 100% Free Hollywood-Grade Face Swap")
 st.write("Hugging Face free AI cluster for 100% Original Identity-Lock system!")
 
 # Sidebar for Free HF Token
@@ -39,7 +39,6 @@ if option == "Pro Generative Photo Swap (Free & Original Identity)":
             else:
                 with st.spinner("Processing on Free Hugging Face AI Space... (Takes 10-20 seconds)"):
                     try:
-                        # Setting environment token for gradio_client authentication
                         os.environ["HF_TOKEN"] = hf_token
                         
                         s_path = "temp_src.jpg"
@@ -47,25 +46,56 @@ if option == "Pro Generative Photo Swap (Free & Original Identity)":
                         s_image.save(s_path)
                         t_image.save(t_path)
                         
-                        # Connecting to free InstantID Space with token auth
-                        client = Client("gokaygokay/InstantID")
+                        success = False
+                        result = None
                         
-                        result = client.predict(
-                            input_image=t_path,
-                            image_fah=s_path,
-                            prompt="high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
-                            negative_prompt="low quality, distorted, bad anatomy, deformed",
-                            controlnet_conditioning_scale=0.8,
-                            ip_adapter_scale=0.8,
-                            num_steps=30,
-                            api_name="/generate_image"
-                        )
+                        # List of active public spaces to try as fallbacks
+                        spaces_to_try = [
+                            ("InstantX/InstantID", s_path, t_path),
+                            ("radames/RealTime-InstantID", s_path, t_path),
+                            ("TencentARC/InstantID", s_path, t_path)
+                        ]
                         
-                        if result:
+                        for space_id, s_p, t_p in spaces_to_try:
+                            try:
+                                client = Client(space_id)
+                                if "InstantX" in space_id:
+                                    result = client.predict(
+                                        input_image=t_p,
+                                        image_fah=s_p,
+                                        prompt="high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
+                                        negative_prompt="low quality, distorted",
+                                        controlnet_conditioning_scale=0.8,
+                                        ip_adapter_scale=0.8,
+                                        num_steps=30,
+                                        api_name="/generate_image"
+                                    )
+                                elif "radames" in space_id:
+                                    result = client.predict(
+                                        image=t_p,
+                                        face_image=s_p,
+                                        prompt="high quality, professional portrait",
+                                        api_name="/predict"
+                                    )
+                                else:
+                                    result = client.predict(
+                                        face_image=s_p,
+                                        pose_image=t_p,
+                                        prompt="high quality, professional portrait",
+                                        api_name="/generate"
+                                    )
+                                
+                                if result:
+                                    success = True
+                                    break
+                            except Exception as ex:
+                                continue
+                        
+                        if success and result:
                             st.image(result, caption="100% Free & Original Identity-Locked Masterpiece", use_container_width=True)
                             st.success("Result generated successfully!")
                         else:
-                            st.error("Failed to generate result.")
+                            st.error("All public free spaces are currently busy. Please try again in a moment.")
                     except Exception as e:
                         st.error(f"Cloud Connection Error: {e}")
 
