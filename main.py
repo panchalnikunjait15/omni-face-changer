@@ -45,12 +45,12 @@ if option == "Pro Generative Photo Swap (100% Exact Identity)":
                         
                         client = replicate.Client(api_token=api_token)
                         
-                        # Using stable fofr/face-swap model
+                        # Using stable lucataco/faceswap model
                         output = client.run(
-                            "fofr/face-swap",
+                            "lucataco/faceswap",
                             input={
-                                "image": open(t_path, "rb"),        # Target body/scene image
-                                "swapper_image": open(s_path, "rb") # Source face image
+                                "image": open(t_path, "rb"),       # Target image
+                                "swap_image": open(s_path, "rb")   # Source face image
                             }
                         )
                         
