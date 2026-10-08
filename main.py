@@ -6,11 +6,16 @@ import replicate
 st.set_page_config(page_title="Omni-Face-Changer Pro Masterpiece", layout="wide")
 
 st.title("🔥 Omni-Face-Changer: Professional Face Swap Suite")
-st.write("Duniya ki sabse powerful, Fast & Stable Cloud Face Swap System!")
+st.write("Duniya ki sabse powerful, Stable Cloud Face Swap System!")
 
-# Sidebar for API Token
+# Sidebar for API Token and Model ID with exact official hash from Replicate docs
 st.sidebar.subheader("🔑 Pro Cloud Configuration")
 api_token = st.sidebar.text_input("Enter Replicate API Token:", type="password")
+
+model_id = st.sidebar.text_input(
+    "Replicate Model ID:", 
+    value="cdingram/face-swap:d1d6ea8c8be89d664a07a457526f7128109dee7030fdac424788d762c71ed111"
+)
 
 option = st.sidebar.selectbox("Mode Pasand karo:", [
     "Pro Generative Photo Swap (100% Exact Identity)",
@@ -36,7 +41,7 @@ if option == "Pro Generative Photo Swap (100% Exact Identity)":
             if not api_token:
                 st.error("❌ Krupaya sidebar ma potano Replicate API Token nakhvo jaruri che!")
             else:
-                with st.spinner("✨ Pro Cloud AI par fast rendering thai rhi che..."):
+                with st.spinner("✨ Pro Cloud AI par rendering thai rhi che..."):
                     try:
                         s_path = "temp_src.jpg"
                         t_path = "temp_tgt.jpg"
@@ -45,12 +50,12 @@ if option == "Pro Generative Photo Swap (100% Exact Identity)":
                         
                         client = replicate.Client(api_token=api_token)
                         
-                        # Using stable lucataco/faceswap model
+                        # Running exact model with official schema inputs (input_image & swap_image)
                         output = client.run(
-                            "lucataco/faceswap",
+                            model_id.strip(),
                             input={
-                                "image": open(t_path, "rb"),       # Target image
-                                "swap_image": open(s_path, "rb")   # Source face image
+                                "input_image": open(t_path, "rb"),  # Target body image
+                                "swap_image": open(s_path, "rb")    # Source face image[cite: 19]
                             }
                         )
                         
