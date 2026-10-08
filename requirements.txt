@@ -6,6 +6,4 @@ opencv-python-headless==4.9.0.80
 Cython==3.0.8
 insightface==0.7.3
 gradio_client
-streamlit
-pillow
 replicate
