@@ -20,14 +20,15 @@ def load_ai_models():
     if 'CUDAExecutionProvider' in onnxruntime.get_available_providers():
         providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
         
-    app = FaceAnalysis(name='buffalo_l', providers=providers)
+    # 'buffalo_s' vapryu che jethi 512MB RAM limit andar aram thi chale!
+    app = FaceAnalysis(name='buffalo_s', providers=providers)
     app.prepare(ctx_id=0, det_size=(640, 640))
     
     model_path = 'inswapper_128.onnx'
     if not os.path.exists(model_path):
         url = "https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx"
         try:
-            with st.spinner("AI Model (inswapper_128.onnx) download thai rhi che, thodi vaar lagse..."):
+            with st.spinner("AI Model (inswapper_128.onnx) download thai rhi che..."):
                 urllib.request.urlretrieve(url, model_path)
         except Exception as e:
             st.error(f"Model download error: {e}")
@@ -83,7 +84,6 @@ option = st.sidebar.selectbox(mode_label, [
     "Standalone .EXE App Builder"
 ])
 
-# Advanced Number-1 Realistic Blending with Inner-Face Masking & Color Matching
 def apply_number1_realistic_blend(target_img, swapped_img, face):
     try:
         x1, y1, x2, y2 = map(int, face.bbox)
@@ -91,7 +91,6 @@ def apply_number1_realistic_blend(target_img, swapped_img, face):
         x1, y1 = max(0, x1), max(0, y1)
         x2, y2 = min(w, x2), min(h, y2)
         
-        # 1. Advanced LAB Color Correction to match lighting and skin tone
         target_face_crop = target_img[y1:y2, x1:x2]
         swapped_face_crop = swapped_img[y1:y2, x1:x2]
         if target_face_crop.size > 0 and swapped_face_crop.size > 0:
@@ -105,10 +104,8 @@ def apply_number1_realistic_blend(target_img, swapped_img, face):
             corrected_face = cv2.cvtColor(s_lab, cv2.COLOR_LAB2BGR)
             swapped_img[y1:y2, x1:x2] = corrected_face
 
-        # 2. Skin detail enhancement (Sharpening without plastic look)
         swapped_img[y1:y2, x1:x2] = cv2.detailEnhance(swapped_img[y1:y2, x1:x2], sigma_s=10, sigma_r=0.15)
 
-        # 3. Precise Inner-Face Masking using facial landmarks (kps) to preserve ears & hair
         mask = np.zeros((h, w), dtype=np.uint8)
         if hasattr(face, 'kps') and face.kps is not None:
             pts = face.kps.astype(np.int32)
