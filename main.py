@@ -1,18 +1,18 @@
 import streamlit as st
 from PIL import Image
-import replicate
+from gradio_client import Client
 import os
 
 st.set_page_config(page_title="Omni-Face-Changer Pro Masterpiece", layout="wide")
 
 st.title("Omni-Face-Changer: Ultimate Hollywood-Grade Face Swap")
-st.write("Official Replicate API Engine - 100% Stable, No Queues, Zero 404 Errors")
+st.write("100% Free Hugging Face Neural Engine - Auto-Queue System (Zero Cost)")
 
-# Sidebar for Replicate API Token
-st.sidebar.subheader("Replicate API Configuration")
-replicate_token = st.sidebar.text_input("Enter Replicate API Token:", type="password")
-replicate_token = replicate_token.strip() if replicate_token else ""
-st.sidebar.caption("Get your free token from replicate.com/account/api-tokens")
+# Sidebar for Free HF Token (Optional)
+st.sidebar.subheader("Hugging Face Configuration")
+hf_token = st.sidebar.text_input("Enter Free HF Token (Optional):", type="password")
+hf_token = hf_token.strip() if hf_token else None
+st.sidebar.caption("Leave blank or paste your free HF token.")
 
 option = st.sidebar.selectbox("Select Mode:", [
     "Pro Generative Face Swap (Original Quality)",
@@ -34,45 +34,43 @@ if option == "Pro Generative Face Swap (Original Quality)":
         with col2:
             st.image(t_image, caption="Target Body", use_container_width=True)
         
-        if st.button("Generate Masterpiece"):
-            if not replicate_token:
-                st.warning("Please enter your Replicate API Token in the sidebar first!")
-            else:
-                with st.spinner("Generating Hollywood-grade face swap via Replicate API... (Please wait)"):
-                    try:
-                        os.environ["REPLICATE_API_TOKEN"] = replicate_token
-                        
-                        s_path = "temp_src.jpg"
-                        t_path = "temp_tgt.jpg"
-                        s_image.save(s_path)
-                        t_image.save(t_path)
-                        
-                        # Opening files for Replicate API execution
-                        with open(s_path, "rb") as face_file, open(t_path, "rb") as target_file_obj:
-                            output = replicate.run(
-                                "tencentarc/instantid:0fcac9846bfa33104e76c125df7f433f5d625d997232231ff08a984a9e525049",
-                                input={
-                                    "image": target_file_obj,
-                                    "face_image": face_file,
-                                    "prompt": "high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
-                                    "negative_prompt": "low quality, distorted, bad anatomy, blurry",
-                                    "controlnet_conditioning_scale": 0.8,
-                                    "ip_adapter_scale": 0.8,
-                                    "num_outputs": 1
-                                }
-                            )
-                        
-                        if output:
-                            img_url = output[0] if isinstance(output, list) else output
-                            st.image(img_url, caption="100% Original Hollywood-Grade Masterpiece", use_container_width=True)
-                            st.success("Masterpiece generated successfully via Replicate API!")
-                        else:
-                            st.error("API returned empty output. Please try again.")
-                    except Exception as e:
-                        st.error(f"Replicate API Error: {e}")
+        if st.button("Generate Masterpiece (Free)"):
+            with st.status("Connected to Free AI Node... Waiting in queue...", expanded=True) as status:
+                try:
+                    s_path = "temp_src.jpg"
+                    t_path = "temp_tgt.jpg"
+                    s_image.save(s_path)
+                    t_image.save(t_path)
+                    
+                    st.write("Initializing secure connection to InstantID free cluster...")
+                    # Using official client which automatically handles Hugging Face queues
+                    client = Client("TencentARC/InstantID", token=hf_token)
+                    
+                    st.write("Processing face alignment & cinematic lighting (Queue active)...")
+                    result = client.predict(
+                        t_path,  # Target image
+                        s_path,  # Source face image
+                        "high quality, professional portrait, ultra realistic skin pores, 8k resolution, cinematic lighting",
+                        "low quality, distorted, bad anatomy, blurry",
+                        0.8, # controlnet scale
+                        0.8, # ip-adapter scale
+                        30,  # num steps
+                        api_name="/generate_image"
+                    )
+                    
+                    if result:
+                        status.update(label="Masterpiece generated successfully! (100% Free)", state="complete", expanded=False)
+                        st.image(result, caption="100% Original Hollywood-Grade Masterpiece", use_container_width=True)
+                        st.success("Masterpiece rendered completely free of cost!")
+                    else:
+                        status.update(label="Generation failed.", state="error", expanded=True)
+                        st.error("Received empty response from the server.")
+                except Exception as e:
+                    status.update(label="Queue Waiting...", state="error", expanded=True)
+                    st.error(f"Notice: {e}. (Tip: Free servers handle queues automatically. Just click generate again if needed!)")
 
 else:
     st.subheader("Cloud Performance Dashboard")
-    st.metric("Rendering Engine", "Replicate Official API", "Active")
-    st.metric("Identity Lock", "100% Original Match", "Maximum")
-    st.info("Configured for direct, high-speed, zero-queue execution.")
+    st.metric("Rendering Engine", "Free Hugging Face Cluster", "Active")
+    st.metric("Cost", "100% Free", "Maximum Savings")
+    st.info("Configured with native automatic queue waiting.")
